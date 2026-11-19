@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Tip } from './Tip';
 import { formatValue, type Marker, type Unit } from '@/lib/dashboard';
+import { fmtDate } from '@/lib/date';
 
 type DataPoint = Record<string, string | number | null>;
 export type SeriesDef = { key: string; label: string; color: string };
@@ -13,7 +14,7 @@ type Props = {
   prev?: { label: string; values: (number | null)[] };
 };
 
-const day = (d: string) => d.slice(5);
+const day = (d: string) => fmtDate(d);
 const PREV = '__prev';
 
 export function TrendChart({ title, hint, compactHint, unit, points, series, note, markers = [], prev }: Props) {
@@ -38,7 +39,7 @@ export function TrendChart({ title, hint, compactHint, unit, points, series, not
             <tbody>
               {data.map((p) => (
                 <tr key={String(p.date)}>
-                  <td>{p.date}</td>
+                  <td>{fmtDate(String(p.date))}</td>
                   {series.map((s) => <td className="num" key={s.label}>{formatValue(p[s.key] as number | null, unit)}</td>)}
                   {prev && <td className="num">{formatValue(p[PREV] as number | null, unit)}</td>}
                 </tr>
@@ -51,11 +52,11 @@ export function TrendChart({ title, hint, compactHint, unit, points, series, not
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke="var(--grid)" />
-              <XAxis dataKey="date" tickFormatter={day} tick={{ fill: 'var(--ink-3)', fontSize: 12 }} axisLine={{ stroke: 'var(--grid)' }} tickLine={false} minTickGap={28} />
+              <XAxis dataKey="date" tickFormatter={day} tick={{ fill: 'var(--ink-3)', fontSize: 12 }} axisLine={{ stroke: 'var(--grid)' }} tickLine={false} minTickGap={40} />
               <YAxis tick={{ fill: 'var(--ink-3)', fontSize: 12 }} axisLine={false} tickLine={false} width={46} tickFormatter={(v) => formatValue(v, unit)} />
               <Tooltip
                 formatter={(v, name) => [formatValue(typeof v === 'number' ? v : null, unit), name]}
-                labelFormatter={(l) => String(l)}
+                labelFormatter={(l) => fmtDate(String(l))}
                 contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, color: 'var(--ink)' }}
                 itemStyle={{ color: 'var(--ink-2)' }}
                 labelStyle={{ color: 'var(--ink)', fontWeight: 600 }}
@@ -75,7 +76,7 @@ export function TrendChart({ title, hint, compactHint, unit, points, series, not
         </div>
       )}
       {hasData && !table && visible.length > 0 && (
-        <div className="sub" style={{ margin: '4px 0 0' }}>Dashed vertical lines: {visible.map((m) => `${m.date.slice(5)} ${m.label}`).join(' · ')}</div>
+        <div className="sub" style={{ margin: '4px 0 0' }}>Dashed vertical lines: {visible.map((m) => `${fmtDate(m.date)} ${m.label}`).join(' · ')}</div>
       )}
     </section>
   );

@@ -15,6 +15,7 @@ import { useFilters } from '@/lib/filters';
 import { sparkFor } from '@/lib/series';
 import { useApiData } from '@/lib/useApi';
 import { PageHead } from '@/components/PageHead';
+import { fmtDate, fmtDateTime } from '@/lib/date';
 
 const GROUP_HINTS: Record<string, string> = {
   Audience: 'How many people visit. Each tile is a per-day average, with the change against the previous period.',
@@ -42,13 +43,13 @@ export default function OverviewPage() {
             <section className="card headcard flush" aria-label="Summary">
               <div className="block-head" style={{ marginBottom: 0 }}><span className="eyebrow" style={{ margin: 0 }}>Summary <Tip label="Summary">What changed most in the chosen range compared with the equal range just before it, in one sentence.</Tip></span></div>
               <div className="chips">
-                <span className="chip">{data.range.from} to {data.range.to}</span>
+                <span className="chip">{fmtDate(data.range.from)} to {fmtDate(data.range.to)}</span>
                 <span className="chip"><i className="dot" style={{ background: 'var(--s1)' }} />Clarity</span>
                 {data.ga4.connected && <span className="chip" title={data.ga4.approximateDays.length ? `Recent days can still change: ${data.ga4.approximateDays.join(', ')}` : undefined}><i className="dot" style={{ background: 'var(--s3)' }} />GA4 · {data.ga4.daysWithData} days</span>}
                 <span className="chip">{data.coverage.current.daysWithData} of {data.coverage.current.requestedDays} days</span>
                 {data.coverage.current.approximateDays.length > 0 && (
                   <span className="chip" title="A 24-hour window taken after a restart, not a clean day">
-                    approximate: {data.coverage.current.approximateDays.map((d) => d.slice(5)).join(', ')}
+                    approximate: {data.coverage.current.approximateDays.map((d) => fmtDate(d)).join(', ')}
                   </span>
                 )}
               </div>
@@ -110,7 +111,7 @@ export default function OverviewPage() {
                 data.latest && (
                   <section className="card">
                     <h2>{data.latest.label} (latest manual refresh)</h2>
-                    <p className="sub">{data.latest.note} Refreshed {new Date(data.latest.fetchedAt).toLocaleString()}.</p>
+                    <p className="sub">{data.latest.note} Refreshed {fmtDateTime(data.latest.fetchedAt)}.</p>
                     <div className="tiles">
                       {[
                         ['Human sessions', formatValue(data.latest.metrics.humanSessions, 'count')],
@@ -146,7 +147,7 @@ export default function OverviewPage() {
               <h2>Data health <Tip label="Data health">Is the data complete and fresh? Missing or approximate days make comparisons less reliable.</Tip></h2>
               <div className="kv" style={{ marginTop: 8 }}>
                 <span>Days stored</span><span className="num">{data.coverage.current.daysWithData} of {data.coverage.current.requestedDays}</span>
-                <span>Last sync</span><span className="num">{status?.clarity.lastRunAt ? new Date(status.clarity.lastRunAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '–'}</span>
+                <span>Last sync</span><span className="num">{status?.clarity.lastRunAt ? fmtDateTime(status.clarity.lastRunAt) : '–'}</span>
               </div>
             </section>
           </div>

@@ -5,6 +5,7 @@ import { useAuth } from './AuthProvider';
 import { api } from '@/lib/api';
 import type { Marker } from '@/lib/dashboard';
 import { Hint } from './Hint';
+import { fmtDate } from '@/lib/date';
 
 const KINDS = ['release', 'campaign', 'incident', 'other'];
 
@@ -43,7 +44,7 @@ export function MarkersPanel({ markers, onChanged }: { markers: Marker[]; onChan
       <Hint>Mark a release, campaign or incident so you can see what changed around it. Markers appear as dashed lines on the charts.</Hint>
       {markers.map((m) => (
         <div className="row" key={m.id} style={{ marginBottom: 4 }}>
-          <span>{m.date}</span><span className="muted">{m.kind}</span><strong>{m.label}</strong>
+          <span>{fmtDate(m.date)}</span><span className="muted">{m.kind}</span><strong>{m.label}</strong>
           {canEdit && <button onClick={() => remove(m.id)} aria-label={`Remove marker ${m.label}`}>Remove</button>}
         </div>
       ))}

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Ga4Panel } from '@/components/Ga4Panel';
 import { api } from '@/lib/api';
+import { fmtDate, fmtDateTime } from '@/lib/date';
 
 type RunResult = { breakdown: string; outcome: string; error: string | null; rows: number | null };
 type Run = {
@@ -20,7 +21,7 @@ type Snapshot = {
 };
 
 const BREAKDOWNS = ['none', 'url', 'channel', 'source', 'device', 'country', 'os'];
-const fmt = (s: string | null) => (s ? new Date(s).toLocaleString() : '—');
+const fmt = fmtDateTime;
 
 export default function DataSources() {
   const { user, loading } = useAuth();
@@ -88,7 +89,7 @@ export default function DataSources() {
           </p>
           <p>
             Days of data: <strong>{status.daysOfData}</strong>
-            {status.firstDay && <> ({status.firstDay} to {status.lastDay})</>}
+            {status.firstDay && <> ({fmtDate(status.firstDay)} to {fmtDate(status.lastDay)})</>}
           </p>
           {!status.configured && (
             <p className="error">Add CLARITY_API_TOKEN to the server .env file and recreate the api container.</p>
@@ -146,7 +147,7 @@ export default function DataSources() {
         <tbody>
           {snaps.map((s) => (
             <tr key={s.id}>
-              <td>{s.date}</td><td>{s.window}</td><td>{s.breakdown}</td>
+              <td>{fmtDate(s.date)}</td><td>{s.window}</td><td>{s.breakdown}</td>
               <td className="muted">{s.metricNames.join(', ')}</td><td>{s.rowCount}</td>
               <td><button onClick={() => showRaw(s.id)}>View raw</button></td>
             </tr>

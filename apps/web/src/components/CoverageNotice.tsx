@@ -1,4 +1,5 @@
 import type { Coverage } from '@/lib/dashboard';
+import { fmtDate, fmtDateTime } from '@/lib/date';
 
 export function CoverageNotice({ current, previous }: { current: Coverage; previous: Coverage }) {
   if (current.daysWithData === 0) {
@@ -11,7 +12,7 @@ export function CoverageNotice({ current, previous }: { current: Coverage; previ
   }
   return (
     <p className="muted">
-      Showing {current.daysWithData} of {current.requestedDays} days ({current.firstDay} to {current.lastDay}).
+      Showing {current.daysWithData} of {current.requestedDays} days ({fmtDate(current.firstDay)} to {fmtDate(current.lastDay)}).
       {previous.daysWithData === 0 ? ' No earlier period to compare with yet.' : ` Compared with ${previous.daysWithData} of ${previous.requestedDays} days before.`}
       {current.approximateDays.length > 0 && ` Approximate days: ${current.approximateDays.join(', ')}. GA4 can still revise its latest two days, and a Clarity day filled in after a restart is a 24-hour window, not a clean day.`}
     </p>
