@@ -1,5 +1,6 @@
 'use client';
 
+import { Icon } from './Icon';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { formatChange, formatValue, type KeyEventsResponse, type Overview, type PagesResponse } from '@/lib/dashboard';
@@ -17,7 +18,7 @@ export function KeyEventsBlock({ days }: { days: number }) {
   return (
     <section className="block" aria-label="Key events">
       <div className="block-head">
-        <h2>Key events <Tip label="Key events">Actions you marked as important in Google Analytics, such as signing up. The number is how many times each happened in this period; the arrow compares per-day counts with the period before.</Tip></h2>
+        <h2><span className="h-ico" style={{ color: 'var(--s4)' }}><Icon name="event" size={16} /></span>Key events <Tip label="Key events">Actions you marked as important in Google Analytics, such as signing up. The number is how many times each happened in this period; the arrow compares per-day counts with the period before.</Tip></h2>
       </div>
       {!data ? <Empty>Loading…</Empty> : top.length === 0 ? (
         <Empty>{data.connected ? 'No key events recorded in this range.' : 'Appears once Google Analytics has synced key events (the first sync after an update reads 90 days).'}</Empty>
@@ -37,7 +38,7 @@ export function TopPagesBlock({ days }: { days: number }) {
   return (
     <section className="block" aria-label="Top pages">
       <div className="block-head">
-        <h2>Top pages <Tip label="Top pages">The pages that most visits looked at in this period (real people only). The arrow compares with the period before.</Tip></h2>
+        <h2><span className="h-ico" style={{ color: 'var(--s3)' }}><Icon name="views" size={16} /></span>Top pages <Tip label="Top pages">The pages that most visits looked at in this period (real people only). The arrow compares with the period before.</Tip></h2>
         <Link href="/pages">See all</Link>
       </div>
       {!data ? <Empty>Loading…</Empty> : top.length === 0 ? <Empty>No page data in this range yet.</Empty> : (
@@ -56,7 +57,7 @@ export function TopFindingsBlock() {
   return (
     <section className="block" aria-label="Top findings">
       <div className="block-head">
-        <h2>Fix first <Tip label="Fix first">The three open findings with the highest priority. Priority is worked out from how bad the problem is, how many people it affects and how much work it takes to fix.</Tip></h2>
+        <h2><span className="h-ico" style={{ color: 'var(--bad)' }}><Icon name="findings" size={16} /></span>Fix first <Tip label="Fix first">The three open findings with the highest priority. Priority is worked out from how bad the problem is, how many people it affects and how much work it takes to fix.</Tip></h2>
         <Link href="/findings">See all</Link>
       </div>
       {!data ? <Empty>Loading…</Empty> : open.length === 0 ? <Empty>No open findings.</Empty> : (
@@ -81,7 +82,7 @@ export function GlanceBlock() {
   return (
     <section className="block" aria-label="Last 7, 14 and 30 days">
       <div className="block-head">
-        <h2>7, 14 and 30 days <Tip label="7, 14 and 30 days">The same numbers over three time spans. If the short span is better than the long one, things are improving lately. Each arrow compares that span with the span of the same length just before it.</Tip></h2>
+        <h2><span className="h-ico" style={{ color: 'var(--s1)' }}><Icon name="time" size={16} /></span>7, 14 and 30 days <Tip label="7, 14 and 30 days">The same numbers over three time spans. If the short span is better than the long one, things are improving lately. Each arrow compares that span with the span of the same length just before it.</Tip></h2>
       </div>
       <table className="glance">
         <thead><tr><th />{cols.map((c) => <th key={c.days} className="num">{c.days} days</th>)}</tr></thead>

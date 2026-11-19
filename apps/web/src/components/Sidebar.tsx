@@ -6,6 +6,7 @@ import { useAuth } from './AuthProvider';
 import { filterQuery } from '@/lib/filters';
 import { useTheme } from '@/lib/theme';
 import { useApiData } from '@/lib/useApi';
+import { Icon, type IconName } from './Icon';
 
 type Status = {
   clarity: { configured: boolean; lastRunAt: string | null; lastRunStatus: string | null; daysOfData: number; lastDay: string | null };
@@ -28,9 +29,9 @@ export function Sidebar() {
   const summary = useApiData<Summary>('/findings/summary').data;
   const keep = filterQuery(new URLSearchParams(sp.toString()));
   const current = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
-  const Item = ({ href, label, count, filters }: { href: string; label: string; count?: string; filters?: boolean }) => (
+  const Item = ({ href, label, count, filters, icon }: { href: string; label: string; count?: string; filters?: boolean; icon: IconName }) => (
     <Link href={filters ? href + keep : href} aria-current={current(href) ? 'page' : undefined}>
-      {label}{count && <span className="count">{count}</span>}
+      <span className="navitem"><Icon name={icon} size={16} />{label}</span>{count && <span className="count">{count}</span>}
     </Link>
   );
 
@@ -42,19 +43,19 @@ export function Sidebar() {
       <Link href="/" className="brand"><span className="logo" aria-hidden="true" />Product Analytics</Link>
       <nav aria-label="Main">
         <div className="navlabel">Analytics</div>
-        <Item href="/" label="Overview" filters />
-        <Item href="/traffic" label="Traffic" filters />
-        <Item href="/pages" label="Pages" filters />
-        <Item href="/friction" label="Friction" filters />
+        <Item href="/" label="Overview" icon="overview" filters />
+        <Item href="/traffic" label="Traffic" icon="traffic" filters />
+        <Item href="/pages" label="Pages" icon="pages" filters />
+        <Item href="/friction" label="Friction" icon="friction" filters />
         <div className="navlabel">Work</div>
-        <Item href="/findings" label="Findings" count={summary ? `${summary.open} open` : undefined} />
+        <Item href="/findings" label="Findings" icon="findings" count={summary ? `${summary.open} open` : undefined} />
         <div className="navlabel">Help</div>
-        <Item href="/help" label="How to read this" />
+        <Item href="/help" label="How to read this" icon="help" />
         {user?.role === 'admin' && (
           <>
             <div className="navlabel">Admin</div>
-            <Item href="/admin/data" label="Data sources" />
-            <Item href="/admin/users" label="Users" />
+            <Item href="/admin/data" label="Data sources" icon="database" />
+            <Item href="/admin/users" label="Users" icon="users" />
           </>
         )}
       </nav>
@@ -67,8 +68,8 @@ export function Sidebar() {
         <div className="who">
           <span>{user?.name} <span className="muted">({user?.role})</span></span>
           <span className="row">
-            <button onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>{theme === 'dark' ? 'Light' : 'Dark'}</button>
-            <button onClick={logout}>Sign out</button>
+            <button onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}><Icon name={theme === 'dark' ? 'sun' : 'moon'} size={14} />{theme === 'dark' ? 'Light' : 'Dark'}</button>
+            <button onClick={logout}><Icon name="logout" size={14} />Sign out</button>
           </span>
         </div>
       </div>
