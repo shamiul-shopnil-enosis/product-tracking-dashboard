@@ -237,3 +237,35 @@ describe('eventRows and event snapshots', () => {
     expect(eventRows([doc([['page_view', 0]])], [], pct).rows).toEqual([]);
   });
 });
+
+describe('Ga4Client.realtimeUsers', () => {
+  const make = () => {
+    const calls: unknown[] = [];
+    const client = new Ga4Client({ get: (k: string) => (k === 'GA4_PROPERTY_ID' ? '123' : undefined) } as never);
+    client.useRunner({
+      runReport: async () => [{}],
+      runRealtimeReport: async (req) => { calls.push(req); return [{ rows: [{ metricValues: [{ value: '17' }] }] }]; },
+    });
+    return { client, calls };
+  };
+
+  it('returns the active users number', async () => {
+    const { client } = make();
+    expect(await client.realtimeUsers(1000)).toMatchObject({ activeUsers: 17, windowMinutes: 30 });
+  });
+
+  it('caches for a minute so many viewers make one call', async () => {
+    const { client, calls } = make();
+    await client.realtimeUsers(1000);
+    await client.realtimeUsers(30_000);
+    expect(calls).toHaveLength(1);
+    await client.realtimeUsers(70_000);
+    expect(calls).toHaveLength(2);
+  });
+
+  it('maps a GA4 failure to a readable error', async () => {
+    const client = new Ga4Client({ get: (k: string) => (k === 'GA4_PROPERTY_ID' ? '123' : undefined) } as never);
+    client.useRunner({ runReport: async () => [{}], runRealtimeReport: async () => { throw { code: 7 }; } });
+    await expect(client.realtimeUsers()).rejects.toThrow('refused the service account');
+  });
+});

@@ -6,7 +6,7 @@ import { MetricSnapshot, MetricSnapshotDocument } from './analytics.schema';
 import { Aggregate, aggregate, daysBetween, pctChange, periodsFor, Trend, trendOf } from './aggregate';
 import { AnnotationsService } from './annotations.service';
 import { findAlerts, mergeAlerts } from './alerts';
-import { buildHeadline } from './headline';
+import { buildHeadline, buildInsight } from './headline';
 import { FindingLinksService } from './finding-links.service';
 import { collectPages } from './explore';
 import { aggregateGa4, Ga4Aggregate, Ga4Day, ga4Day } from './ga4';
@@ -193,8 +193,11 @@ export class DashboardService {
       headline: (() => {
         const h = buildHeadline(clarityTiles, days);
         // With no Clarity history to compare, GA4 (which has long history) can still answer the question
-        return !clarityTiles.some((t) => t.change !== null) && ga4TileList.some((t) => t.change !== null) ? buildHeadline(ga4TileList, days) : h;
+        const base = !clarityTiles.some((t) => t.change !== null) && ga4TileList.some((t) => t.change !== null) ? buildHeadline(ga4TileList, days) : h;
+        return base;
       })(),
+      // What the changes probably mean, in one sentence, or empty when nothing needs interpreting
+      insight: buildInsight([...clarityTiles, ...ga4TileList]),
       // Human sessions of the previous period, day for day, for the dashed comparison line (null where a day is missing)
       previousSessions: daysBetween(r.previousFrom, r.previousTo).map((date) => prev.get(date)?.humanSessions ?? null),
       coverage: {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { formatChange, formatValue, type KeyEventsResponse, type Overview, type PagesResponse } from '@/lib/dashboard';
 import { BAND_LABEL, type FindingList } from '@/lib/findings';
@@ -94,5 +95,27 @@ export function GlanceBlock() {
         </tbody>
       </table>
     </section>
+  );
+}
+
+type Realtime = { available: true; activeUsers: number; windowMinutes: number; asOf: string } | { available: false; reason: string };
+
+/** People on the site right now (GA4 counts the last 30 minutes). Refreshes every minute while the page is open; hides itself if GA4 cannot answer. */
+export function LiveTile() {
+  const { data, reload } = useApiData<Realtime>('/dashboard/ga4-realtime');
+  useEffect(() => {
+    const id = setInterval(() => { if (document.visibilityState === 'visible') reload(); }, 60_000);
+    return () => clearInterval(id);
+  }, [reload]);
+  if (!data || !data.available) return null;
+  return (
+    <div className="tile live" aria-label="Active users right now">
+      <div className="tile-top">
+        <span>Active right now</span>
+        <Tip label="Active right now">People using the site in the last {data.windowMinutes} minutes, according to Google Analytics. Updates every minute. It includes automated visitors GA4 does not recognise.</Tip>
+      </div>
+      <div className="tile-value"><i className="dot pulse" aria-hidden /> {formatValue(data.activeUsers, 'count')}</div>
+      <div className="prev">last {data.windowMinutes} minutes · GA4</div>
+    </div>
   );
 }

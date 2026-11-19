@@ -34,3 +34,17 @@ describe('buildHeadline with GA4 tiles', () => {
     expect(s).toBe('GA4 sessions up 90%. But watch GA4 engagement rate down 22%.');
   });
 });
+
+import { buildInsight } from './headline';
+describe('buildInsight', () => {
+  const t = (key: string, change: number) => ({ key, change, trend: 'flat' });
+  it('warns when traffic grows but engagement falls', () => {
+    expect(buildInsight([t('ga4Sessions', 190), t('ga4Engagement', -22)])).toContain('automated traffic');
+  });
+  it('says nothing for healthy growth', () => {
+    expect(buildInsight([t('ga4Sessions', 30), t('ga4Engagement', 5)])).toBe('');
+  });
+  it('flags a bot jump without real growth', () => {
+    expect(buildInsight([t('botShare', 40), t('sessions', 0)])).toContain('bot share rose');
+  });
+});

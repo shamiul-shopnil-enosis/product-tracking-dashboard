@@ -39,7 +39,17 @@ export interface Ga4ReportRequest {
 /** The part of the Google client we use, so tests can replace it. */
 export interface Ga4Runner {
   runReport(request: unknown): Promise<unknown[]>;
+  runRealtimeReport?(request: unknown): Promise<unknown[]>;
 }
+
+export interface RealtimeUsers {
+  /** People active on the site in the last 30 minutes, as GA4 counts them */
+  activeUsers: number;
+  windowMinutes: number;
+  asOf: string;
+}
+/** Realtime numbers are cached this long, so many open dashboards make one GA4 call a minute. */
+export const REALTIME_CACHE_MS = 60_000;
 
 @Injectable()
 export class Ga4Client {
@@ -72,6 +82,25 @@ export class Ga4Client {
   private getRunner(): Ga4Runner {
     if (!this.runner) this.runner = new BetaAnalyticsDataClient({ keyFilename: this.keyFile }) as unknown as Ga4Runner;
     return this.runner;
+  }
+
+  private realtime: { at: number; value: RealtimeUsers } | null = null;
+
+  /** Active users right now (last 30 minutes). GA4 Realtime has no dimensions here: one number. */
+  async realtimeUsers(now = Date.now()): Promise<RealtimeUsers> {
+    if (this.realtime && now - this.realtime.at < REALTIME_CACHE_MS) return this.realtime.value;
+    const problem = this.problem;
+    if (problem && !this.runner) throw new Ga4Error('not_configured', problem);
+    try {
+      const runner = this.getRunner();
+      if (!runner.runRealtimeReport) throw new Ga4Error('server', 'GA4 client has no realtime support');
+      const [res] = (await runner.runRealtimeReport({ property: `properties/${this.propertyId}`, metrics: [{ name: 'activeUsers' }] })) as [Ga4Response];
+      const value = { activeUsers: Number(res.rows?.[0]?.metricValues?.[0]?.value ?? 0) || 0, windowMinutes: 30, asOf: new Date(now).toISOString() };
+      this.realtime = { at: now, value };
+      return value;
+    } catch (err) {
+      throw err instanceof Ga4Error ? err : errorForGrpc(err);
+    }
   }
 
   async report(req: Ga4ReportRequest): Promise<Ga4Response> {

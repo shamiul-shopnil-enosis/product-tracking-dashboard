@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MetricSnapshot, MetricSnapshotDocument } from './analytics.schema';
 import { daysBetween, pctChange, periodsFor } from './aggregate';
+import { Ga4Client } from './ga4.client';
 import { dailySeries, dimensionRows, eventRows, landingRows } from './ga4';
 import { BREAKDOWNS } from './clarity.constants';
 import { AnnotationsService } from './annotations.service';
@@ -29,6 +30,7 @@ export class ExploreService {
     config: ConfigService,
     private readonly annotations: AnnotationsService,
     private readonly findingLinks: FindingLinksService,
+    private readonly ga4Client: Ga4Client,
   ) {
     this.excludedHosts = (config.get<string>('DASHBOARD_EXCLUDE_HOSTS', '') ?? '')
       .split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
@@ -140,6 +142,16 @@ export class ExploreService {
         source: 'Google Analytics (GA4). Landing pages are the first page of a session, as GA4 records it. GA4 only removes bots it recognises, so these counts include some automated traffic.',
       },
     };
+  }
+
+  /** Active users right now. Never throws: the Overview tile just hides itself when GA4 cannot answer. */
+  async ga4Realtime() {
+    if (!this.ga4Client.configured) return { available: false as const, reason: 'GA4 is not connected' };
+    try {
+      return { available: true as const, ...(await this.ga4Client.realtimeUsers()) };
+    } catch (err) {
+      return { available: false as const, reason: (err as Error).message };
+    }
   }
 
   /** GA4 key events by event name: how many times each important action happened. */

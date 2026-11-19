@@ -56,6 +56,11 @@ export class DashboardController {
     return this.explore.landingPages(q.days ?? 14, q.minSessions ?? 5);
   }
 
+  @Get('ga4-realtime')
+  ga4Realtime() {
+    return this.explore.ga4Realtime();
+  }
+
   @Get('ga4-key-events')
   ga4KeyEvents(@Query() q: RangeQuery) {
     return this.explore.ga4KeyEvents(q.days ?? 14);

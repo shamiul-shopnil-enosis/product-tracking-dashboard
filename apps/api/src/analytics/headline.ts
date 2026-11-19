@@ -49,3 +49,21 @@ export function buildHeadline(tiles: HeadlineTile[], days: number): string {
   if (!good.length) return `Watch ${list(bad.map(say))}.`;
   return `${cap}. But watch ${list(bad.map(say))}.`;
 }
+
+/**
+ * A second sentence that says what the changes probably mean, for readers who will not work it out themselves.
+ * Only fires on patterns that are well known to mislead: traffic growth that is not engaged.
+ */
+export function buildInsight(tiles: HeadlineTile[]): string {
+  const change = (k: string) => tiles.find((t) => t.key === k)?.change ?? null;
+  const traffic = Math.max(change('ga4Sessions') ?? -Infinity, change('sessions') ?? -Infinity);
+  const engagement = change('ga4Engagement');
+  if (traffic >= 20 && engagement !== null && engagement <= -4) {
+    return 'Visits are growing but fewer of them are engaged, which usually means more automated traffic rather than more real interest. Check the bot share and the Traffic page before celebrating the growth.';
+  }
+  const bot = change('botShare');
+  if (bot !== null && bot >= 20 && (change('sessions') ?? 0) <= 5) {
+    return 'The bot share rose while real visits did not, so a traffic jump in the raw numbers is probably not real people.';
+  }
+  return '';
+}

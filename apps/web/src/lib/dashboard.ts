@@ -29,6 +29,7 @@ export type Overview = {
   annotations: Marker[];
   alerts: Alerts;
   headline: string;
+  insight: string;
   previousSessions: (number | null)[];
   ga4: { connected: boolean; daysWithData: number; approximateDays: string[] };
   sourceComparison: { ga4SessionsPerDay: number | null; clarityHumanSessionsPerDay: number | null; clarityAllSessionsPerDay: number | null } | null;
