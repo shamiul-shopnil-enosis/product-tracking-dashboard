@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/product_tracking
+      UPLOADS_DIR: /data/uploads
+    depends_on:
+      - mongo
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - uploads_data:/data/uploads
+      - ./secrets:/run/secrets:ro
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        API_INTERNAL_URL: http://api:4000
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+volumes:
+  mongo_data:
+  uploads_data:

@@ -1,0 +1,25 @@
+'use client';
+
+import { formatValue, type Tile as TileData } from '@/lib/dashboard';
+import { Delta } from './Delta';
+import { Tip } from './Tip';
+import { Spark } from './Spark';
+
+/** A metric: value, change against the previous period, trend line and and a plain-language definition that is always shown. */
+export function Tile({ tile, spark, color, compact = false }: { tile: TileData; spark?: (number | null)[]; color?: string; /** Definition as an "i" tooltip instead of always-visible text */ compact?: boolean }) {
+  return (
+    <div className="tile">
+      <div className="tile-top">
+        <span>{tile.label}</span>
+        {compact && <Tip label={tile.label}>{tile.help}</Tip>}
+      </div>
+      <div className="tile-value">{formatValue(tile.value, tile.unit)}</div>
+      <div className="tile-bottom">
+        <Delta change={tile.change} trend={tile.trend} />
+        {spark && <span className="spark"><Spark values={spark} color={color} /></span>}
+      </div>
+      {tile.previous !== null && <div className="prev">before: {formatValue(tile.previous, tile.unit)}</div>}
+      {!compact && <div className="tile-help">{tile.help}</div>}
+    </div>
+  );
+}

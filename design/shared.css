@@ -1,0 +1,52 @@
+/* Shared design tokens for the three Overview mockups. Chart colours follow the validated dataviz palette. */
+:root {
+  color-scheme: light;
+  --page: #f5f5f3; --surface: #fcfcfb; --surface-2: #f0efec;
+  --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #6b6a66;
+  --grid: #e4e3df; --border: #dddcd7;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
+  --good-wash: #e6f4e6; --bad-wash: #fbeaea; --warn-wash: #fdf3d9;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #121211; --surface: #1a1a19; --surface-2: #232321;
+  --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #9a998f;
+  --grid: #383835; --border: #2f2f2c;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
+  --good-wash: #12301a; --bad-wash: #3a1a1a; --warn-wash: #33290f;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-3); }
+.mock-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 8px 16px; background: var(--surface-2); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--ink-2); }
+.mock-bar b { color: var(--ink); }
+.mock-bar .sp { flex: 1; }
+.iconbtn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 4px 10px; font-size: 13px; }
+.iconbtn:hover { background: var(--surface-2); }
+/* deltas: always icon + words, never colour alone */
+.delta { display: inline-flex; gap: 5px; align-items: baseline; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.delta i { font-style: normal; font-size: 10px; }
+.delta em { font-style: normal; font-weight: 500; color: var(--ink-3); }
+.delta.better i { color: var(--good); } .delta.worse i { color: var(--bad); } .delta.flat i { color: var(--ink-3); }
+.chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 2px 10px; font-size: 12px; color: var(--ink-2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+/* charts */
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { fill: var(--ink-3); font-size: 12px; }
+.chart .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); min-width: 150px; z-index: 5; display: none; }
+.chart .tip b { display: block; margin-bottom: 4px; }
+.chart .tip div { display: flex; justify-content: space-between; gap: 12px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 14px; height: 2px; border-radius: 2px; display: inline-block; }
+.viewtable { border: 0; background: none; text-decoration: underline; font-size: 12px; color: var(--ink-3); padding: 0; }

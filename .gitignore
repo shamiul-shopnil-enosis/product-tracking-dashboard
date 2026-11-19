@@ -1,0 +1,12 @@
+node_modules
+dist
+.next
+.env
+uploads
+graphify-out
+*.log
+# credentials: never commit
+secrets/*
+!secrets/README.txt
+
+backups/

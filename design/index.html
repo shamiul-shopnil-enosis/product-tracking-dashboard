@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview design options</title><link rel="stylesheet" href="shared.css">
+<style>
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; } h1 { letter-spacing: -.03em; margin: 0 0 8px; }
+  .opt { display: block; text-decoration: none; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin: 16px 0; }
+  .opt:hover { border-color: var(--ink-3); } .opt b { font-size: 18px; } .opt p { margin: 6px 0 0; color: var(--ink-2); }
+  .opt .tags { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+</style></head><body>
+<div class="mock-bar"><b>Overview design options</b><span class="sp"></span><button class="iconbtn" id="themebtn">Light / dark</button></div>
+<main>
+  <h1>Pick a direction for the Overview</h1>
+  <p class="muted">The same page three ways. Current values are real (your last 72 hours from Clarity). Trends, comparisons and the PMD 4.0.0 marker are illustrative. Try light and dark, and narrow the window to see the phone layout. Hover the charts.</p>
+  <a class="opt" href="a-calm.html"><b>A · Calm</b><p>One column, a headline, four big numbers and one main chart. Everything else sits below as quiet rows. Closest to Plausible.</p><div class="tags"><span class="chip">Fewest elements</span><span class="chip">Easiest for the whole team</span></div></a>
+  <a class="opt" href="b-dense.html"><b>B · Dense</b><p>Sidebar with grouped navigation, a sticky filter bar, metrics grouped into Audience, Engagement and Friction with trend lines, and an alerts and data-health panel. Closest to PostHog and Mixpanel.</p><div class="tags"><span class="chip">Most information at a glance</span><span class="chip">Best for exploring</span></div></a>
+  <a class="opt" href="c-sharp.html"><b>C · Sharp</b><p>Very large type, no cards, thin rules and one table of all metrics. Closest to Linear and Vercel.</p><div class="tags"><span class="chip">Most distinctive</span><span class="chip">Least visual clutter</span></div></a>
+</main>
+<script src="shared.js"></script></body></html>
