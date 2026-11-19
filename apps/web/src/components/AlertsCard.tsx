@@ -1,12 +1,12 @@
 import { formatValue, type Alerts } from '@/lib/dashboard';
 import { Delta } from './Delta';
+import { Tip } from './Tip';
 
 /** The metrics that moved more than the chosen threshold, or why none can be judged. */
 export function AlertsCard({ alerts }: { alerts: Alerts }) {
   return (
     <section className="card flush" aria-label="Needs attention">
-      <h2>Needs attention</h2>
-      <p className="sub">Moved {alerts.threshold}% or more against the previous period</p>
+      <h2>Needs attention <Tip label="Needs attention">Moved {alerts.threshold}% or more against the previous period.</Tip></h2>
       {alerts.suppressed ? (
         <p className="muted">{alerts.suppressed}</p>
       ) : alerts.items.length === 0 ? (

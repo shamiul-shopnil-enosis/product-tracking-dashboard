@@ -14,6 +14,7 @@ import { formatValue, type Overview } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
 import { sparkFor } from '@/lib/series';
 import { useApiData } from '@/lib/useApi';
+import { PageHead } from '@/components/PageHead';
 
 const GROUP_HINTS: Record<string, string> = {
   Audience: 'How many people visit. Each tile is a per-day average, with the change against the previous period.',
@@ -32,7 +33,7 @@ export default function OverviewPage() {
 
   return (
     <AnalyticsPage quiet show={{ traffic: true, compare: true, threshold: true }}>
-      <div className="page-head"><h1>Overview</h1><p>Is the product improving? The short answer, then the numbers behind it.</p></div>
+      <PageHead title="Overview">Is the product improving? The short answer, then the numbers behind it.</PageHead>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
       {!data && !error && <PageSkeleton />}
       {data && (

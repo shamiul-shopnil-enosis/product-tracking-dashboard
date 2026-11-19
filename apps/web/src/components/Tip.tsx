@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 /** An "i" icon that explains a number or block in a sentence or two. Opens on hover, tap or keyboard; Escape or a tap elsewhere closes it. */
-export function Tip({ label, children }: { label: string; children: ReactNode }) {
+export function Tip({ label, children, side = 'right', wide = false }: { label: string; children: ReactNode; /** Which edge of the "i" the popup lines up with; use left near the left edge of the page */ side?: 'left' | 'right'; wide?: boolean }) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const ref = useRef<HTMLSpanElement>(null);
@@ -21,7 +21,7 @@ export function Tip({ label, children }: { label: string; children: ReactNode })
         type="button" className="info" aria-label={`What does “${label}” mean?`} aria-expanded={open} aria-describedby={open ? id : undefined}
         onClick={() => setOpen(true)} onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
       >i</button>
-      {open && <span role="tooltip" id={id} className="tip-pop">{children}</span>}
+      {open && <span role="tooltip" id={id} className={`tip-pop${side === 'left' ? ' left' : ''}${wide ? ' wide' : ''}`}>{children}</span>}
     </span>
   );
 }

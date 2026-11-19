@@ -46,7 +46,7 @@ export function FilterBar({ show = {}, quiet = false }: { show?: Show; quiet?: b
           </select>
         </label>
       )}
-      {quiet && <Tip label="the filters"><HelpText show={show} /></Tip>}
+      <Tip label="the filters" side="left" wide><HelpText show={show} /></Tip>
     </div>
   );
 }
@@ -56,7 +56,6 @@ export function AnalyticsPage({ show, quiet = false, children }: { show?: Show; 
   return (
     <>
       <FilterBar show={show} quiet={quiet} />
-      {!quiet && <p className="filter-help"><HelpText show={show} /></p>}
       <div className="page">{children}</div>
     </>
   );

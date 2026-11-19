@@ -1,30 +1,28 @@
 import type { ReactNode } from 'react';
+import { Tip } from './Tip';
 
-/** A short, always-visible plain-language explanation. Used under every section so nobody has to guess. */
-export function Hint({ children }: { children: ReactNode }) {
+/** Plain-language help for a section. Lives behind an "i" so the page stays clean. */
+export function Hint({ children, label = 'About this section' }: { children: ReactNode; label?: string }) {
   return (
     <p className="hint">
-      <span className="hint-i" aria-hidden>i</span>
-      <span>{children}</span>
+      <Tip label={label} side="left">{children}</Tip>
+      <span className="hint-label">{label}</span>
     </p>
   );
 }
 
 export type GuideItem = { term: string; text: string };
 
-/** "How to read this table": one line per column, open by default, collapsible once you know it. */
+/** "What the columns mean": one line per column, behind an "i". */
 export function Guide({ title = 'What the columns mean', items }: { title?: string; items: GuideItem[] }) {
   return (
-    <details className="guide" open>
-      <summary>{title}</summary>
-      <dl>
+    <p className="hint">
+      <Tip label={title} side="left" wide>
         {items.map((i) => (
-          <div key={i.term}>
-            <dt>{i.term}</dt>
-            <dd>{i.text}</dd>
-          </div>
+          <span className="tp" key={i.term}><b>{i.term}</b>: {i.text}</span>
         ))}
-      </dl>
-    </details>
+      </Tip>
+      <span className="hint-label">{title}</span>
+    </p>
   );
 }

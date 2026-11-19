@@ -26,11 +26,9 @@ export function TrendChart({ title, hint, compactHint, unit, points, series, not
   return (
     <section className="chart" aria-label={title}>
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <span className="chart-title">{title}{compactHint && hint && <> <Tip label={title}>{hint}</Tip></>}</span>
+        <span className="chart-title">{title}{(hint || note) && <> <Tip label={title} side="left">{hint && <span className="tp">{hint}</span>}{note && <span className="tp">{note}</span>}</Tip></>}</span>
         {hasData && <button className="link" onClick={() => setTable(!table)}>{table ? 'View chart' : 'View as table'}</button>}
       </div>
-      {hint && !compactHint && <div className="sub">{hint}</div>}
-      {note && <div className="sub">{note}</div>}
       {!hasData ? (
         <div className="empty"><b>No full days stored yet</b>This chart fills in after the nightly runs.</div>
       ) : table ? (

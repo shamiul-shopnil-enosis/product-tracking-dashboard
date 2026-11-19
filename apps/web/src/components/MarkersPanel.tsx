@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useAuth } from './AuthProvider';
 import { api } from '@/lib/api';
 import type { Marker } from '@/lib/dashboard';
+import { Hint } from './Hint';
 
 const KINDS = ['release', 'campaign', 'incident', 'other'];
 
@@ -39,7 +40,7 @@ export function MarkersPanel({ markers, onChanged }: { markers: Marker[]; onChan
   return (
     <details className="card">
       <summary><strong>Chart markers</strong> <span className="muted">({markers.length} in this range)</span></summary>
-      <p className="muted">Mark a release, campaign or incident so you can see what changed around it. Markers appear as dashed lines on the charts.</p>
+      <Hint>Mark a release, campaign or incident so you can see what changed around it. Markers appear as dashed lines on the charts.</Hint>
       {markers.map((m) => (
         <div className="row" key={m.id} style={{ marginBottom: 4 }}>
           <span>{m.date}</span><span className="muted">{m.kind}</span><strong>{m.label}</strong>

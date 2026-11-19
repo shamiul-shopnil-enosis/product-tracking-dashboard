@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { api, ApiError } from '@/lib/api';
 import type { Attachment, Finding } from '@/lib/findings';
+import { Hint } from './Hint';
 
 type Props = { findingId: string; items: Attachment[]; canEdit: boolean; onChange: (f: Finding) => void };
 
@@ -44,7 +45,7 @@ export function Attachments({ findingId, items, canEdit, onChange }: Props) {
   return (
     <section className="card">
       <strong>Screenshots</strong>
-      <p className="muted">PNG, JPG or WebP, up to 5 MB each, 10 per finding. Do not include customer emails or review text.</p>
+      <Hint label="Upload rules">PNG, JPG or WebP, up to 5 MB each, 10 per finding. Do not include customer emails or review text.</Hint>
       <div className="row">
         {items.map((a) => (
           <figure key={a.id} style={{ margin: 0, width: 180 }}>

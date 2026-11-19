@@ -12,6 +12,7 @@ import { TrendChart } from '@/components/TrendChart';
 import { formatChange, formatValue, type Breakdown, type Ga4ChannelsResponse } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
 import { useApiData } from '@/lib/useApi';
+import { PageHead } from '@/components/PageHead';
 
 const DIMENSIONS = [
   { value: 'channel', label: 'Channel' }, { value: 'source', label: 'Source' }, { value: 'country', label: 'Country' },
@@ -24,11 +25,7 @@ export default function TrafficPage() {
   const [source, setSource] = useState<'clarity' | 'ga4'>('clarity');
   return (
     <AnalyticsPage>
-      <div className="page-head">
-        <h1>Traffic and sources</h1>
-        <p>Where visitors come from and what they use.</p>
-      </div>
-      <Hint>Use this page to see which channels bring visitors and whether they stay. “Channel” is the kind of source (search, direct, social, referral); pick Source, Country, Device or Operating system to slice the same visits another way. Two tools are available: Clarity shows how real people behave, GA4 shows the largest picture including where visits start.</Hint>
+      <PageHead title="Traffic and sources" more="Use this page to see which channels bring visitors and whether they stay. “Channel” is the kind of source (search, direct, social, referral); pick Source, Country, Device or Operating system to slice the same visits another way. Two tools are available: Clarity shows how real people behave, GA4 shows the largest picture including where visits start.">Where visitors come from and what they use.</PageHead>
       <div className="row" role="group" aria-label="Data source" style={{ marginBottom: 8 }}>
         <span className="muted">Data from</span>
         <div className="seg">

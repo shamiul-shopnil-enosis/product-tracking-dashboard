@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { useApiData } from '@/lib/useApi';
+import { Hint } from './Hint';
 
 type Result = { breakdown: string; outcome: string; error: string | null; rows: number | null };
 type Run = { id: string; trigger: string; status: string; startedAt: string; callsUsed: number; error: string | null; results: Result[] };
@@ -40,7 +41,7 @@ export function Ga4Panel() {
           <p>Connection: <strong>{s.configured ? 'ready' : 'not connected'}</strong> · Nightly sync: <strong>{s.enabled ? 'on (03:15 UTC)' : 'off'}</strong></p>
           {!s.configured && s.problem && <p className="error">{s.problem}. Put the key at <code>secrets/ga4.json</code>, set <code>GA4_PROPERTY_ID</code> in <code>.env</code>, then recreate the api container.</p>}
           <p>Days of data: <strong>{s.daysOfData}</strong>{s.firstDay && <> ({s.firstDay} to {s.lastDay})</>}</p>
-          <p className="muted">GA4 can return history, so the first sync reads the last 90 days. After that the last 3 days are re-read each night because GA4 revises recent days.</p>
+          <Hint label="How syncing works">GA4 can return history, so the first sync reads the last 90 days. After that the last 3 days are re-read each night because GA4 revises recent days.</Hint>
           <p className="row">
             <button className="primary" disabled={busy || !s.configured} onClick={() => sync(3)}>Sync last 3 days</button>
             <button disabled={busy || !s.configured} onClick={() => sync(30)}>Sync last 30 days</button>

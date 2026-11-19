@@ -98,7 +98,7 @@ export default function DataSources() {
 
       <div className="card">
         <strong>Manual refresh</strong>
-        <p className="muted">Each ticked breakdown uses one of the 10 calls allowed per rolling 24 hours. Stores the last 24 hours as today&apos;s rolling snapshot.</p>
+        <Hint label="About manual refresh">Each ticked breakdown uses one of the 10 calls allowed per rolling 24 hours. Stores the last 24 hours as today&apos;s rolling snapshot.</Hint>
         <div className="row">
           {BREAKDOWNS.map((b) => (
             <label key={b} style={{ margin: 0 }}>

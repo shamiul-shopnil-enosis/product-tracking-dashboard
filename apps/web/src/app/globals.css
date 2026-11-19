@@ -243,3 +243,103 @@ pre { background: var(--surface-2); padding: 12px; overflow: auto; border-radius
 button.primary { background: var(--s1); border-color: var(--s1); color: #fff; }
 button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--s1) 85%, #000); }
 tbody tr:hover td { background: color-mix(in srgb, var(--s1) 6%, var(--surface)); }
+
+/* ---------- help lives behind the "i" ---------- */
+.hint { align-items: center; gap: 6px; margin: 6px 0 10px; color: var(--ink-3); font-size: 12.5px; }
+.hint-label { color: var(--ink-3); }
+.page-head h1 { display: flex; align-items: center; gap: 8px; }
+.page-head h1 .tip .info { width: 20px; height: 20px; }
+.tip-pop.left { left: 0; right: auto; }
+.tip-pop.wide { width: 340px; }
+.tip-pop .tp { display: block; }
+.tip-pop .tp + .tp { margin-top: 6px; }
+.tip-pop b { color: var(--ink); }
+
+/* ---------- mobile ---------- */
+.two-col > *, .blocks > *, .charts > * { min-width: 0; }
+@media (max-width: 1100px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+.sidebar nav { scrollbar-width: none; }
+.sidebar nav::-webkit-scrollbar { display: none; }
+@media (max-width: 860px) {
+  h1 { font-size: 22px; }
+  .page-head h1 { gap: 6px; }
+  .tile-value { font-size: 22px; }
+  .headcard { padding: 16px; }
+  .card, .block, .chart { overflow-x: auto; }
+  .card { padding: 14px; }
+  .filterbar { gap: 8px 12px; }
+  .filterbar label { font-size: 12.5px; }
+  .row { gap: 6px; }
+  .login-card { padding: 22px; }
+  /* Tooltips become a bottom sheet so they can never run off a narrow screen */
+  .tip { position: static; }
+  .tip-pop, .tip-pop.left, .tip-pop.wide { position: fixed; left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; max-width: none; max-height: 60vh; overflow-y: auto; padding: 12px 14px; font-size: 13px; box-shadow: 0 10px 40px rgba(0, 0, 0, .35); z-index: 60; }
+  .tip .info, .page-head h1 .tip .info { width: 28px; height: 28px; min-height: 0; font-size: 12px; }
+  /* Tables that sit outside a scroll wrapper scroll sideways instead of stretching the page */
+  .card > table, .block > table, .glance { display: block; overflow-x: auto; max-width: 100%; }
+  .guide dl > div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+@media (max-width: 520px) {
+  .page { padding: 12px 12px 48px; }
+  .filterbar { padding: 8px 12px; }
+  .legend { gap: 8px 12px; }
+  .chip { font-size: 11.5px; }
+  button, .btn { padding: 8px 12px; }
+  .seg button { padding: 6px 11px; }
+}
+
+/* ---------- motion ----------
+   Fades and slides only run on entry (fill-mode "backwards"), so nothing keeps a transform afterwards
+   and the mobile tooltip sheet (position: fixed) is never trapped inside an animated parent. */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: translateY(-4px) scale(.97); } }
+@keyframes sheet { from { opacity: 0; transform: translateY(24px); } }
+@keyframes grow { from { transform: scaleX(0); } }
+@keyframes slide-in { from { opacity: 0; transform: translateX(-8px); } }
+
+.page > * { animation: rise .45s cubic-bezier(.2, .7, .2, 1) backwards; }
+.page > *:nth-child(2) { animation-delay: .05s; }
+.page > *:nth-child(3) { animation-delay: .1s; }
+.page > *:nth-child(4) { animation-delay: .15s; }
+.page > *:nth-child(5) { animation-delay: .2s; }
+.page > *:nth-child(n+6) { animation-delay: .25s; }
+.tiles > *, .key-tiles > * { animation: rise .5s cubic-bezier(.2, .7, .2, 1) backwards; }
+.tiles > *:nth-child(2) { animation-delay: .06s; } .tiles > *:nth-child(3) { animation-delay: .12s; }
+.tiles > *:nth-child(4) { animation-delay: .18s; } .tiles > *:nth-child(5) { animation-delay: .24s; }
+.tiles > *:nth-child(n+6) { animation-delay: .3s; }
+.blocks > * { animation: rise .5s cubic-bezier(.2, .7, .2, 1) backwards; }
+.blocks > *:nth-child(2) { animation-delay: .08s; } .blocks > *:nth-child(3) { animation-delay: .16s; }
+.rail > * { animation: slide-in .5s cubic-bezier(.2, .7, .2, 1) backwards; }
+.rail > *:nth-child(2) { animation-delay: .1s; }
+.sidebar nav a { animation: slide-in .4s ease backwards; }
+.sidebar nav a:nth-child(2) { animation-delay: .03s; } .sidebar nav a:nth-child(3) { animation-delay: .06s; }
+.sidebar nav a:nth-child(4) { animation-delay: .09s; } .sidebar nav a:nth-child(5) { animation-delay: .12s; }
+.sidebar nav a:nth-child(n+6) { animation-delay: .15s; }
+.login-card { animation: rise .5s cubic-bezier(.2, .7, .2, 1) backwards; }
+.notice, .insight { animation: fade .5s ease backwards; }
+tbody tr { animation: fade .35s ease backwards; }
+.bar { transform-origin: left center; animation: grow .7s cubic-bezier(.2, .7, .2, 1) backwards; }
+.tip-pop { animation: pop .14s ease-out; transform-origin: top right; }
+.tip-pop.left { transform-origin: top left; }
+.logo { transition: transform .4s cubic-bezier(.2, .7, .2, 1); }
+.brand:hover .logo { transform: rotate(12deg) scale(1.08); }
+
+/* Interaction feedback */
+.sidebar nav a, button, .btn, .tile, .block, .chart, .card, .chip, .info, .seg button, .tile-ico, .icon, tbody td {
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .2s ease, transform .2s cubic-bezier(.2, .7, .2, 1);
+}
+button:active:not(:disabled), .btn:active { transform: scale(.97); }
+.info:hover { border-color: var(--s1); color: var(--s1); }
+.sidebar nav a:hover .icon { transform: scale(1.12); }
+.sidebar nav a[aria-current="page"] { transition: none; }
+@media (hover: hover) and (min-width: 861px) {
+  .tile:hover, .block:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, .08); border-color: color-mix(in srgb, var(--accent, var(--s1)) 35%, var(--border)); }
+  .chart:hover, .card:hover { box-shadow: 0 6px 20px rgba(0, 0, 0, .06); }
+}
+@media (max-width: 860px) {
+  .tip-pop, .tip-pop.left, .tip-pop.wide { animation: sheet .22s cubic-bezier(.2, .7, .2, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
+}

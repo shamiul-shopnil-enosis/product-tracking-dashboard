@@ -14,6 +14,7 @@ import { formatValue, type Friction, type PageRow } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
 import { sparkFor } from '@/lib/series';
 import { useApiData } from '@/lib/useApi';
+import { PageHead } from '@/components/PageHead';
 
 const SORTS = [
   { value: 'any', label: 'All friction' }, { value: 'quickback', label: 'Quick backs' }, { value: 'dead', label: 'Dead clicks' },
@@ -30,8 +31,7 @@ export default function FrictionPage() {
 
   return (
     <AnalyticsPage>
-      <div className="page-head"><h1>Friction</h1><p>Where visitors hit trouble: quick backs, dead clicks, rage clicks and script errors. Human sessions only.</p></div>
-      <Hint>Friction means visitors had trouble. The four signals are quick backs, dead clicks, rage clicks and script errors (explained under the table). Lower is better. Use the table to find which pages to fix first, then log the problem as a finding.</Hint>
+      <PageHead title="Friction" more="Friction means visitors had trouble. The four signals are quick backs, dead clicks, rage clicks and script errors (explained under the table). Lower is better. Use the table to find which pages to fix first, then log the problem as a finding.">Where visitors hit trouble: quick backs, dead clicks, rage clicks and script errors. Human sessions only.</PageHead>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
       {!data && !error && <PageSkeleton />}
       {data && (

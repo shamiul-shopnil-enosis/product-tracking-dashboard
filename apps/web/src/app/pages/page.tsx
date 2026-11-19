@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { formatChange, formatValue, type LandingResponse, type PagesResponse } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
 import { useApiData } from '@/lib/useApi';
+import { PageHead } from '@/components/PageHead';
 
 const SORTS = [
   { value: 'sessions', label: 'Most sessions' }, { value: 'scrollDepth', label: 'Highest scroll depth' },
@@ -28,8 +29,7 @@ export default function PagesPage() {
 
   return (
     <AnalyticsPage>
-      <div className="page-head"><h1>Pages</h1><p>How each page performs: how many visitors reach it, how far they scroll and how long they stay. Human sessions only.</p></div>
-      <Hint>Each row is one page of the site. Use it to find pages that attract visitors but lose them (low scroll, short time, many quick backs), and pages that work well. “Rank by” changes the order; “Minimum sessions” hides pages with too few visits to judge. A session counts for every page it viewed.</Hint>
+      <PageHead title="Pages" more="Each row is one page of the site. Use it to find pages that attract visitors but lose them (low scroll, short time, many quick backs), and pages that work well. “Rank by” changes the order; “Minimum sessions” hides pages with too few visits to judge. A session counts for every page it viewed.">How each page performs: how many visitors reach it, how far they scroll and how long they stay. Human sessions only.</PageHead>
       <div className="row">
         <label style={{ margin: 0 }}>Rank by{' '}
           <select value={sort} onChange={(e) => setSort(e.target.value)}>{SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select>
