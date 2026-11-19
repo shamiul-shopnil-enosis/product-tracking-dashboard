@@ -158,7 +158,7 @@ export default function DataSources() {
       {raw && (
         <>
           <p className="row"><strong>Raw response</strong><button onClick={() => setRaw('')}>Close</button></p>
-          <pre style={{ background: '#f6f6f6', padding: 12, overflow: 'auto', maxHeight: 400, fontSize: 12 }}>{raw}</pre>
+          <pre style={{ maxHeight: 400, fontSize: 12 }}>{raw}</pre>
         </>
       )}
       <Ga4Panel />
