@@ -6,6 +6,7 @@ export type ReportCard = { label: string; source: 'clarity' | 'ga4' | null; valu
 export type ReportAlert = Alerts['items'][number];
 
 export type ReportInput = {
+  siteName: string;
   from: string; to: string;
   /** For example "Compared with 26 Oct 2026 to 8 Nov 2026", or "Not compared" */
   compareText: string;
@@ -77,8 +78,8 @@ export async function downloadOverviewPdf(input: ReportInput): Promise<void> {
   };
 
   // ---- header ----
-  text('Enosis Outsourcing', M, y + 3, { size: 9, bold: true, color: [208, 59, 59] });
-  text('Product Analytics', M + 33, y + 3, { size: 9, color: INK3 });
+  text(input.siteName, M, y + 3, { size: 9, bold: true, color: [208, 59, 59] });
+  text('Product Analytics', M + 3 + doc.getTextWidth(clean(input.siteName)) * 1.0, y + 3, { size: 9, color: INK3 });
   y += 11;
   text('Overview report', M, y, { size: 20, bold: true });
   y += 7;
@@ -222,10 +223,10 @@ export async function downloadOverviewPdf(input: ReportInput): Promise<void> {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.setDrawColor(...RULE); doc.setLineWidth(0.2); doc.line(M, PAGE_H - 12, PAGE_W - M, PAGE_H - 12);
-    text(`Enosis Outsourcing - Product Analytics - ${range}`, M, PAGE_H - 7.5, { size: 7.5, color: INK3 });
+    text(`${input.siteName} - Product Analytics - ${range}`, M, PAGE_H - 7.5, { size: 7.5, color: INK3 });
     text(`Page ${p} of ${pages}`, PAGE_W - M, PAGE_H - 7.5, { size: 7.5, color: INK3, align: 'right' });
   }
 
-  doc.setProperties({ title: `Overview report ${input.from} to ${input.to}`, subject: 'Product Analytics overview', author: 'Enosis Outsourcing Product Analytics' });
+  doc.setProperties({ title: `Overview report ${input.from} to ${input.to}`, subject: 'Product Analytics overview', author: `${input.siteName} Product Analytics` });
   doc.save(`overview-${input.from}_to_${input.to}.pdf`);
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { RuntimeConfig } from '../settings/runtime-config';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { existsSync } from 'fs';
 import { Ga4Response } from './ga4';
@@ -56,20 +56,32 @@ export const REALTIME_CACHE_MS = 60_000;
 @Injectable()
 export class Ga4Client {
   private runner: Ga4Runner | null = null;
+  private ownRunner = false;
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: RuntimeConfig) {}
 
   get propertyId(): string {
     return (this.config.get<string>('GA4_PROPERTY_ID') ?? '').trim();
   }
   private get keyFile(): string {
-    return this.config.get<string>('GA4_KEY_FILE', '/run/secrets/ga4.json');
+    return this.config.get<string>('GA4_KEY_FILE', '/run/secrets/ga4.json') as string;
+  }
+
+  /** The service-account key saved from the screen, if any. Takes the place of the key file. */
+  private get keyJson(): Record<string, unknown> | null {
+    const raw = this.config.get<string>('GA4_KEY_JSON');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 
   /** Why GA4 is not ready, or null when it is. */
   get problem(): string | null {
-    if (!/^\d+$/.test(this.propertyId)) return 'GA4_PROPERTY_ID is not set (it is the number under Admin, Property details)';
-    if (!existsSync(this.keyFile)) return `Key file not found at ${this.keyFile}`;
+    if (!/^\d+$/.test(this.propertyId)) return 'The GA4 property ID is not set (it is the number under Admin, Property details)';
+    if (!this.keyJson && !existsSync(this.keyFile)) return 'No GA4 service-account key is set. Upload the key file under Data sources.';
     return null;
   }
   get configured(): boolean {
@@ -82,8 +94,18 @@ export class Ga4Client {
   }
 
   private getRunner(): Ga4Runner {
-    if (!this.runner) this.runner = new BetaAnalyticsDataClient({ keyFilename: this.keyFile }) as unknown as Ga4Runner;
+    if (!this.runner) {
+      const json = this.keyJson;
+      this.runner = new BetaAnalyticsDataClient(json ? { credentials: json as never } : { keyFilename: this.keyFile }) as unknown as Ga4Runner;
+      this.ownRunner = true;
+    }
     return this.runner;
+  }
+
+  /** Forget the connection and cached numbers, after the property or key was changed. */
+  reset() {
+    if (this.ownRunner) { this.runner = null; this.ownRunner = false; }
+    this.realtime = null;
   }
 
   private realtime: { at: number; value: RealtimeUsers } | null = null;

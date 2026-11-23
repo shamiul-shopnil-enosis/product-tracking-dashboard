@@ -5,6 +5,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { AuthModule } from './auth/auth.module';
 import { FindingsModule } from './findings/findings.module';
 import { HealthModule } from './health/health.module';
+import { SettingsModule } from './settings/settings.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { UsersModule } from './users/users.module';
         serverSelectionTimeoutMS: 5000,
       }),
     }),
+    SettingsModule,
     HealthModule,
     UsersModule,
     AuthModule,

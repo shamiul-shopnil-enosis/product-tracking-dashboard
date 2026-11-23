@@ -26,6 +26,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { api } from '@/lib/api';
 import { downloadOverviewPdf, type ReportCard } from '@/lib/overviewReport';
 import { compareText } from '@/lib/range';
+import { useSiteName } from '@/lib/site';
 
 type Status = { clarity: { lastRunAt: string | null; lastRunStatus: string | null }; ga4: { configured: boolean; lastRunAt: string | null } };
 
@@ -34,6 +35,7 @@ export default function OverviewPage() {
   const [alertHidden, setAlertHidden] = useState(false);
   const layout = useLayout();
   const { user } = useAuth();
+  const siteName = useSiteName();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
   const seo = useApiData<SeoResponse>(`/dashboard/seo?${f.rangeQs}`).data;
@@ -67,7 +69,7 @@ export default function OverviewPage() {
         if (t) reportCards.push({ label: t.label.replace(/\s*\((GA4|Clarity)\)$/i, ''), source: t.source, value: formatValue(t.value, t.unit), change: t.change, trend: t.trend, before: t.previous !== null ? formatValue(t.previous, t.unit) : null });
       }
       await downloadOverviewPdf({
-        from: data.range.from, to: data.range.to, compare: f.compare, compareText: compareText(f.range), traffic: f.traffic, threshold: f.threshold,
+        siteName, from: data.range.from, to: data.range.to, compare: f.compare, compareText: compareText(f.range), traffic: f.traffic, threshold: f.threshold,
         generatedBy: user?.name ?? 'you', headline: data.headline, insight: data.insight, cards: reportCards, alerts: data.alerts.items,
         chart: {
           title: f.traffic === 'all' ? 'Sessions per day (human and bot)' : 'Human sessions per day',

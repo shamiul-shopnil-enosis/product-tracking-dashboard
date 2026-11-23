@@ -9,6 +9,7 @@ import { useTheme } from '@/lib/theme';
 import { useApiData } from '@/lib/useApi';
 import { Icon, type IconName } from './Icon';
 import { Logo } from './Logo';
+import { useSiteName } from '@/lib/site';
 
 type Status = {
   clarity: { configured: boolean; lastRunAt: string | null; lastRunStatus: string | null; daysOfData: number; lastDay: string | null };
@@ -33,6 +34,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const sp = useSearchParams();
   const [theme, toggleTheme] = useTheme();
+  const siteName = useSiteName();
   const status = useApiData<Status>('/dashboard/status').data;
   const summary = useApiData<Summary>('/findings/summary').data;
   const keep = filterQuery(new URLSearchParams(sp.toString()));
@@ -50,7 +52,7 @@ export function Sidebar() {
   const fresh = c?.lastRunAt && Date.now() - new Date(c.lastRunAt).getTime() < 36 * 3600000 && c.lastRunStatus !== 'failed';
   return (
     <aside className="sidebar" aria-label="Sidebar">
-      <Link href="/" className="brand" aria-label="Product Analytics, home"><Logo width={124} /><span className="brand-name">Product Analytics</span></Link>
+      <Link href="/" className="brand" aria-label="Product Analytics, home"><Logo width={124} /><span className="brand-name">Product Analytics<small>{siteName}</small></span></Link>
       <nav aria-label="Main">
         <div className="navlabel">Analytics</div>
         <Item href="/" label="Overview" icon="overview" filters />

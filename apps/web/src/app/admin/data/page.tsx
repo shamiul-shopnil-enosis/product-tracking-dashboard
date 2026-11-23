@@ -4,6 +4,7 @@ import { Hint } from '@/components/Hint';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Ga4Panel } from '@/components/Ga4Panel';
+import { ConnectionSettings } from '@/components/ConnectionSettings';
 import { api } from '@/lib/api';
 import { fmtDate, fmtDateTime } from '@/lib/date';
 
@@ -75,6 +76,7 @@ export default function DataSources() {
     <>
       <h1>Data sources</h1>
       <Hint>Admin only. This page shows whether the dashboard is receiving data from Microsoft Clarity and Google Analytics, when it last synced, and lets you refresh by hand. Normally nothing needs doing here: the syncs run every night by themselves.</Hint>
+      <ConnectionSettings />
       <h2>Microsoft Clarity</h2>
       {error && <p className="error" role="alert">{error}</p>}
       {status && (
@@ -92,7 +94,7 @@ export default function DataSources() {
             {status.firstDay && <> ({fmtDate(status.firstDay)} to {fmtDate(status.lastDay)})</>}
           </p>
           {!status.configured && (
-            <p className="error">Add CLARITY_API_TOKEN to the server .env file and recreate the api container.</p>
+            <p className="error">Save the Clarity token under Connections above.</p>
           )}
         </div>
       )}

@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { ClarityClient, ClarityError, errorForStatus } from './clarity.client';
 
-const cfg = (token?: string) => ({ get: () => token }) as unknown as ConfigService;
+const cfg = (token?: string) => ({ get: () => token }) as never;
 
 function mockFetch(impl: () => Promise<Partial<Response>>) {
   return jest.spyOn(global, 'fetch').mockImplementation(impl as never);

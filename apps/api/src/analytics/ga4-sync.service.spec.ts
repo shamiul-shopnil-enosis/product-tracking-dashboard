@@ -7,7 +7,7 @@ import { Ga4SyncService } from './ga4-sync.service';
 const query = (v: unknown) => Object.assign(Promise.resolve(v), { sort: () => Promise.resolve(v) });
 
 function setup(opts: { propertyId?: string; keyFile?: string; runner: (req: any) => unknown }) {
-  const config = { get: (k: string, d?: string) => ({ GA4_PROPERTY_ID: opts.propertyId ?? '123456', GA4_KEY_FILE: opts.keyFile ?? __filename }[k] ?? d) } as unknown as ConfigService;
+  const config = { get: (k: string, d?: string) => ({ GA4_PROPERTY_ID: opts.propertyId ?? '123456', GA4_KEY_FILE: opts.keyFile ?? __filename }[k] ?? d) } as never;
   const client = new Ga4Client(config);
   client.useRunner({ runReport: async (req) => [opts.runner(req)] });
   const stored: any[] = [];
@@ -80,9 +80,9 @@ describe('Ga4SyncService.run', () => {
 
   it('refuses to run when GA4 is not set up', async () => {
     const { svc } = setup({ propertyId: '', runner: healthy });
-    await expect(svc.run('manual', 3)).rejects.toThrow(/GA4_PROPERTY_ID/);
+    await expect(svc.run('manual', 3)).rejects.toThrow(/GA4 property ID/);
     const missing = setup({ keyFile: '/nonexistent/ga4.json', runner: healthy });
-    await expect(missing.svc.run('manual', 3)).rejects.toThrow(/Key file not found/);
+    await expect(missing.svc.run('manual', 3)).rejects.toThrow(/service-account key/);
   });
 
   it('flags the most recent days as approximate', async () => {

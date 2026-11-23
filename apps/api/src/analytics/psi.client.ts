@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { RuntimeConfig } from '../settings/runtime-config';
 import { Strategy } from './psi';
 
 const ENDPOINT = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
@@ -22,7 +22,7 @@ export interface PsiRunner {
 
 @Injectable()
 export class PsiClient implements PsiRunner {
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: RuntimeConfig) {}
 
   private get key(): string {
     return (this.config.get<string>('PAGESPEED_API_KEY') ?? '').trim();

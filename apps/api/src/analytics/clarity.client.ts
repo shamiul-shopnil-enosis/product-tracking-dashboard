@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { RuntimeConfig } from '../settings/runtime-config';
 import { CLARITY_ENDPOINT } from './clarity.constants';
 
 export type ClarityErrorKind = 'not_configured' | 'auth' | 'rate_limit' | 'bad_request' | 'server' | 'network' | 'bad_response';
@@ -22,7 +22,7 @@ export function errorForStatus(status: number): ClarityError {
 
 @Injectable()
 export class ClarityClient {
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: RuntimeConfig) {}
 
   get configured(): boolean {
     return !!this.config.get<string>('CLARITY_API_TOKEN')?.trim();
@@ -31,7 +31,7 @@ export class ClarityClient {
   /** One call to the Data Export API. Counts as one of the 10 daily requests. */
   async fetchInsights(numOfDays: 1 | 2 | 3, dimensions: readonly string[]): Promise<unknown[]> {
     const token = this.config.get<string>('CLARITY_API_TOKEN')?.trim();
-    if (!token) throw new ClarityError('not_configured', 'CLARITY_API_TOKEN is not set');
+    if (!token) throw new ClarityError('not_configured', 'The Clarity API token is not set');
 
     const params = new URLSearchParams({ numOfDays: String(numOfDays) });
     dimensions.slice(0, 3).forEach((d, i) => params.set(`dimension${i + 1}`, d));

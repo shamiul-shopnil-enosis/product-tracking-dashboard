@@ -64,3 +64,8 @@ Metric snapshots (the history) are kept forever. Sync run logs older than `RETEN
 ```bash
 docker compose build && docker compose up -d
 ```
+
+## Connections and other sites
+Admins can set the site name, the Clarity token, the GA4 property and key file, and the PageSpeed key under **Data sources, Connections**, with no `.env` edit or restart. Keys saved there are stored encrypted in MongoDB (AES-256-GCM, key from `SETTINGS_SECRET`, or `JWT_SECRET` if that is empty) and can be replaced but never read back. A saved value wins over `.env`; "Remove saved ..." goes back to `.env`.
+- Do not change `SETTINGS_SECRET` or `JWT_SECRET` casually: saved keys become unreadable and are ignored (the log says so) until saved again.
+- One dashboard shows one site. To show another site (for example Enosis Solutions), change the name and replace the Clarity token, the GA4 property and its key file. History already stored stays in the database, so use a separate install or database for a second site. The logo image is part of the app and is not set from the screen.

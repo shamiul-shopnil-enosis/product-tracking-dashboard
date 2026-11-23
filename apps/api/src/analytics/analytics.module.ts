@@ -22,6 +22,8 @@ import { PsiClient } from './psi.client';
 import { SpeedController } from './speed.controller';
 import { SpeedService } from './speed.service';
 import { DashboardLayout, DashboardLayoutSchema } from './layout.schema';
+import { SettingsController } from './settings.controller';
+import { SettingsService } from './settings.service';
 import { LayoutController } from './layout.controller';
 import { LayoutService } from './layout.service';
 import { ClarityClient } from './clarity.client';
@@ -43,8 +45,8 @@ import { ClaritySyncService } from './clarity-sync.service';
       { name: AppSetting.name, schema: AppSettingSchema },
     ]),
   ],
-  controllers: [AnalyticsController, DashboardController, AnnotationsController, Ga4Controller, SpeedController, LayoutController],
-  providers: [ClarityClient, ClaritySyncService, Ga4Client, Ga4SyncService, DashboardService, ExploreService, AnnotationsService, FindingLinksService, MaintenanceService, PsiClient, SpeedService, LayoutService],
-  exports: [ClaritySyncService, Ga4SyncService, SpeedService],
+  controllers: [AnalyticsController, DashboardController, AnnotationsController, Ga4Controller, SpeedController, LayoutController, SettingsController],
+  providers: [ClarityClient, ClaritySyncService, Ga4Client, Ga4SyncService, DashboardService, ExploreService, AnnotationsService, FindingLinksService, MaintenanceService, PsiClient, SpeedService, LayoutService, SettingsService],
+  exports: [ClaritySyncService, Ga4SyncService, SpeedService, SettingsService],
 })
 export class AnalyticsModule {}

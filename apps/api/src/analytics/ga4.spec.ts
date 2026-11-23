@@ -163,7 +163,7 @@ import { Ga4Client, Ga4Error } from './ga4.client';
 
 describe('Ga4Client.reportAll', () => {
   const client = (pages: Array<unknown[]>, rowCount: number) => {
-    const c = new Ga4Client({ get: (k: string) => (k === 'GA4_PROPERTY_ID' ? '1' : undefined) } as unknown as ConfigService);
+    const c = new Ga4Client({ get: (k: string) => (k === 'GA4_PROPERTY_ID' ? '1' : undefined) } as never);
     const asked: number[] = [];
     c.useRunner({
       runReport: async (req) => {

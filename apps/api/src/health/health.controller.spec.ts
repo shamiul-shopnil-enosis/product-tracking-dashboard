@@ -10,6 +10,7 @@ const make = (readyState: number, runs: unknown[] = [], enabled = { clarity: tru
     { enabled: enabled.ga4 } as never,
     { enabled: async () => false } as never,
     { get: () => contact } as never,
+    { siteName: () => 'Enosis Outsourcing' } as never,
   );
 };
 
@@ -36,10 +37,10 @@ describe('HealthController', () => {
   it('gives the sign-in page only the last update time and the access contact', async () => {
     const at = new Date('2026-11-19T03:20:00Z');
     const r = await make(1, [{ status: 'success', startedAt: at }], undefined, ' it@example.com ').context();
-    expect(r).toEqual({ dataUpdatedAt: at.toISOString(), accessContact: 'it@example.com' });
+    expect(r).toEqual({ dataUpdatedAt: at.toISOString(), accessContact: 'it@example.com', siteName: 'Enosis Outsourcing' });
   });
 
   it('reports no update time and no contact when nothing is known', async () => {
-    expect(await make(1, []).context()).toEqual({ dataUpdatedAt: null, accessContact: null });
+    expect(await make(1, []).context()).toEqual({ dataUpdatedAt: null, accessContact: null, siteName: 'Enosis Outsourcing' });
   });
 });

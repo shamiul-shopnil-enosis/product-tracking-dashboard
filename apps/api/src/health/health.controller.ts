@@ -1,3 +1,4 @@
+import { SettingsService } from '../analytics/settings.service';
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -18,6 +19,7 @@ export class HealthController {
     private readonly ga4: Ga4SyncService,
     private readonly speed: SpeedService,
     private readonly config: ConfigService,
+    private readonly settings: SettingsService,
   ) {}
 
   private async sources(): Promise<[string, boolean][]> {
@@ -60,6 +62,6 @@ export class HealthController {
       const at = providerHealth(name, runs, new Date()).lastSuccessAt;
       if (at && (!latest || at > latest)) latest = at;
     }
-    return { dataUpdatedAt: latest ? latest.toISOString() : null, accessContact: this.config.get<string>('ACCESS_CONTACT')?.trim() || null };
+    return { dataUpdatedAt: latest ? latest.toISOString() : null, accessContact: this.config.get<string>('ACCESS_CONTACT')?.trim() || null, siteName: this.settings.siteName() };
   }
 }
