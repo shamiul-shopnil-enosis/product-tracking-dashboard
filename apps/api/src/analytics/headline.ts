@@ -31,9 +31,11 @@ const say = (t: HeadlineTile) => `${PHRASE[t.key] ?? t.key} ${(t.change ?? 0) > 
 const list = (items: string[]) => (items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`);
 
 /** One plain sentence that answers "is the product improving?" from the tiles. */
-export function buildHeadline(tiles: HeadlineTile[], days: number): string {
+/** `against` is the number of days in the previous period, or a phrase when the comparison is a custom period. */
+export function buildHeadline(tiles: HeadlineTile[], against: number | string): string {
+  const vs = typeof against === 'number' ? `the previous ${against} days` : against;
   if (tiles.length === 0) return '';
-  if (tiles.every((t) => t.change === null)) return `Not enough history yet to compare with the previous ${days} days.`;
+  if (tiles.every((t) => t.change === null)) return `Not enough history yet to compare with ${vs}.`;
 
   const big = (t: HeadlineTile) => Math.abs(t.change ?? 0);
   const good = tiles.filter((t) => t.trend === 'better' && big(t) >= GOOD_MIN).sort((a, b) => big(b) - big(a)).slice(0, 2);
@@ -42,7 +44,7 @@ export function buildHeadline(tiles: HeadlineTile[], days: number): string {
     .sort((a, b) => big(b) - big(a))
     .slice(0, 2);
 
-  if (!good.length && !bad.length) return `Nothing moved much compared with the previous ${days} days.`;
+  if (!good.length && !bad.length) return `Nothing moved much compared with ${vs}.`;
   const goodText = list(good.map(say));
   const cap = goodText.charAt(0).toUpperCase() + goodText.slice(1);
   if (good.length && !bad.length) return `Looking good: ${goodText}, with nothing getting worse.`;

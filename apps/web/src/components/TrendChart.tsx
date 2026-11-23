@@ -9,7 +9,7 @@ import { fmtDate } from '@/lib/date';
 type DataPoint = Record<string, string | number | null>;
 export type SeriesDef = { key: string; label: string; color: string };
 type Props = {
-  title: string; /** Plain-language: what this chart shows and how to read it */ hint?: string; /** Show the hint as an "i" tooltip next to the title */ compactHint?: boolean; unit: Unit; points: DataPoint[]; series: SeriesDef[]; note?: string; markers?: Marker[];
+  title: string; /** Plain-language: what this chart shows and how to read it */ hint?: string; /** Chart height in pixels (default 230) */ height?: number; /** Show the hint as an "i" tooltip next to the title */ compactHint?: boolean; unit: Unit; points: DataPoint[]; series: SeriesDef[]; note?: string; markers?: Marker[];
   /** The previous period, day for day, drawn dashed behind the main line */
   prev?: { label: string; values: (number | null)[] };
 };
@@ -17,7 +17,7 @@ type Props = {
 const day = (d: string) => fmtDate(d);
 const PREV = '__prev';
 
-export function TrendChart({ title, hint, compactHint, unit, points, series, note, markers = [], prev }: Props) {
+export function TrendChart({ title, hint, compactHint, height = 230, unit, points, series, note, markers = [], prev }: Props) {
   const [table, setTable] = useState(false);
   const data: DataPoint[] = points.map((p, i) => (prev ? { ...p, [PREV]: prev.values[i] ?? null } : p));
   const hasData = points.some((p) => series.some((s) => p[s.key] !== null));
@@ -48,7 +48,7 @@ export function TrendChart({ title, hint, compactHint, unit, points, series, not
           </table>
         </div>
       ) : (
-        <div style={{ height: 230 }}>
+        <div style={{ height }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke="var(--grid)" />

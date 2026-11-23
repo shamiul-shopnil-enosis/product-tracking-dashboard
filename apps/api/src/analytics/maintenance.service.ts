@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 import { providerHealth, ProviderHealth } from '../health/sync-health';
 import { Ga4SyncService } from './ga4-sync.service';
 import { ClaritySyncService } from './clarity-sync.service';
+import { SpeedService } from './speed.service';
 import { SyncRun, SyncRunDocument } from './analytics.schema';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -26,6 +27,7 @@ export class MaintenanceService {
     private readonly config: ConfigService,
     private readonly clarity: ClaritySyncService,
     private readonly ga4: Ga4SyncService,
+    private readonly speed: SpeedService,
     @InjectModel(SyncRun.name) private readonly runs: Model<SyncRunDocument>,
   ) {}
 
@@ -54,7 +56,8 @@ export class MaintenanceService {
 
   async problems(now = new Date()): Promise<ProviderHealth[]> {
     const out: ProviderHealth[] = [];
-    for (const [name, enabled] of [['clarity', this.clarity.enabled], ['ga4', this.ga4.enabled]] as const) {
+    const sources: [string, boolean][] = [['clarity', this.clarity.enabled], ['ga4', this.ga4.enabled], ['pagespeed', await this.speed.enabled()]];
+    for (const [name, enabled] of sources) {
       if (!enabled) continue;
       const runs = await this.runs.find({ provider: name }).sort({ startedAt: -1 }).limit(20);
       const h = providerHealth(name, runs, now);

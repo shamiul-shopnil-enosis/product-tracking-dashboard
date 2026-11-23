@@ -21,19 +21,41 @@ Schedule daily and copy `backups/` off the server (the backup holds the keys; ke
 `15 5 * * * /path/to/project/scripts/backup.sh >> /path/to/project/backups/backup.log 2>&1`
 Clarity history exists only in our database (Clarity keeps 3 days), so a lost database means lost Clarity history.
 
+## Page speed (PageSpeed Insights)
+The Speed page keeps one reading per day for each page in its list, on mobile and desktop, because Google does not keep history.
+- **Set up once:** in the Google Cloud project that holds the GA4 service account, enable "PageSpeed Insights API", create an API key restricted to that API, and put it in `.env` as `PAGESPEED_API_KEY`, then `docker compose up -d --force-recreate api`. Without a key Google's shared quota is almost always used up and every test is refused. The key is free (25,000 tests a day; this uses a few dozen).
+- **Pages:** an admin adds up to 20 pages on the Speed page. A new page gets its first check straight away, so its history starts that day.
+- **Schedule:** daily at 12:00 Bangladesh time (06:00 UTC) unless an admin changes it on the Core Web Vitals page ("Daily check time"). The server looks every 5 minutes and starts the check once that time has passed, once per Bangladesh day, so a failed run does not retry and use up the quota. If the server was off then, it catches up after that time on the next start. "Run the daily check now" (admin) runs it on demand. Editors and admins can test any public page (up to 40 manual results a day).
+- **What is stored:** a small summary per test (score, lab times, real-user vitals, Core Web Vitals verdict). Recommendations are kept for the latest test only. Real-user figures are Google's rolling 28-day Chrome data, so they change slowly and are missing for pages with little traffic (the site-wide figure is shown then).
+- **The day:** days are Bangladesh days. The scheduled run stands for the day; a manual run counts only if the day has none.
+
 ## Common problems
 | Symptom | Cause and fix |
 |---|---|
 | Clarity day missing | Server was off at 00:05 UTC. On restart before 12:00 UTC a catch-up fills it, marked approximate. Otherwise it is a permanent gap. |
 | Clarity sync "429" / paused | Its 10 calls per rolling 24 hours are used up. The app waits an hour and retries. Do not run manual probes repeatedly. |
+| "No PageSpeed API key" or tests refused (429) | Set `PAGESPEED_API_KEY` (see Page speed). A 429 with a key means the day's quota is used up; it resets daily. |
 | GA4 sync fails with auth | Key file missing or service account removed from the GA4 property (needs Viewer). Check `secrets/ga4.json`, then `docker compose up -d --force-recreate api`. |
-| "Too many failed sign-in attempts" | 5 wrong passwords for one email in 15 minutes. Wait, or restart the api to clear. |
-| Locked out as admin | Set `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env` only works on an empty database; reset the password by an admin user, or via mongosh on the `users` collection (bcrypt hash). |
+| "Too many failed attempts" | 5 wrong passwords for one email in 15 minutes. Wait, or restart the api to clear. |
+| Someone forgot their password | An admin opens Users and clicks "Reset password link", then sends the link. It works once, for 72 hours. |
+| Someone says "session ended" | They signed out on another device, changed their password, were deactivated, or were idle for `SESSION_IDLE_HOURS`. Sign in again. |
+| Locked out as the only admin | See "Admin recovery link" below. `ADMIN_EMAIL` / `ADMIN_PASSWORD` only work on an empty database. |
+
+## Admin recovery link
+Only if no admin can sign in. This makes a one-time link, valid 72 hours, for an existing admin (replace the email and the address):
+```
+TOKEN=$(openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n')
+HASH=$(printf %s "$TOKEN" | shasum -a 256 | cut -d' ' -f1)
+docker compose exec mongo mongosh product_tracking --quiet --eval "db.users.updateOne({email:'admin@example.com'},{\$set:{linkTokenHash:'$HASH',linkPurpose:'reset',linkExpiresAt:new Date(Date.now()+72*3600e3)}})"
+echo "http://localhost:3000/accept-invite#token=$TOKEN"
+```
+Open the printed address, choose a new password, and you are signed in. Use `sha256sum` instead of `shasum -a 256` on Linux.
 
 ## Rotating secrets
 - Clarity token: Clarity → Settings → Data Export → new token → `.env` `CLARITY_API_TOKEN` → recreate api.
 - GA4 key: Google Cloud → service account → new key → replace `secrets/ga4.json` → recreate api, delete the old key.
 - `JWT_SECRET`: change in `.env` and recreate api; everyone must sign in again.
+- Sign-out is real: signing out, changing a password or deactivating someone ends their sessions on every device at once.
 
 ## Retention
 Metric snapshots (the history) are kept forever. Sync run logs older than `RETENTION_RUN_DAYS` (default 180, minimum 30) are deleted nightly.

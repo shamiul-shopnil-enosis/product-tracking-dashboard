@@ -107,8 +107,24 @@ export function normalizeUrl(url: string): string {
   }
 }
 
-/** The latest full UTC day and the equal period before it. */
-export function periodsFor(days: number, now = new Date()) {
+/** A custom range chosen in the date picker, and optionally the period to compare it with. All days are YYYY-MM-DD. */
+export interface PeriodSpec { from: string; to: string; compareFrom?: string; compareTo?: string }
+/** Either "the last N full days" or a custom range. */
+export type Span = number | PeriodSpec;
+
+export function spanDays(span: Span): number {
+  return typeof span === 'number' ? span : daysBetween(span.from, span.to).length;
+}
+
+/** The chosen period and the one to compare it with. Without a custom range: the latest full UTC day and the equal period before it. */
+export function periodsFor(span: Span, now = new Date()) {
+  if (typeof span !== 'number') {
+    const days = spanDays(span);
+    const previousTo = span.compareTo ?? addDays(span.from, -1);
+    const previousFrom = span.compareFrom ?? addDays(previousTo, -(days - 1));
+    return { days, from: span.from, to: span.to, previousFrom, previousTo };
+  }
+  const days = span;
   const to = addDays(now.toISOString().slice(0, 10), -1);
   const from = addDays(to, -(days - 1));
   const previousTo = addDays(from, -1);

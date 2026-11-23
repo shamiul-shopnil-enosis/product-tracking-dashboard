@@ -34,6 +34,8 @@ export interface Ga4ReportRequest {
   endDate: string;
   limit?: number;
   offset?: number;
+  /** Only sessions from the Organic Search channel */
+  organicOnly?: boolean;
 }
 
 /** The part of the Google client we use, so tests can replace it. */
@@ -115,6 +117,7 @@ export class Ga4Client {
         limit: req.limit ?? GA4_PAGE_SIZE,
         offset: req.offset ?? 0,
         keepEmptyRows: false,
+        ...(req.organicOnly ? { dimensionFilter: { filter: { fieldName: 'sessionDefaultChannelGroup', stringFilter: { matchType: 'EXACT', value: 'Organic Search' } } } } : {}),
       });
       return res as Ga4Response;
     } catch (err) {

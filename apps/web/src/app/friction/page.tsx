@@ -24,10 +24,10 @@ const cell = (c: PageRow['rage']) => (c.affected ? `${c.affected} (${formatValue
 const path = (url: string) => { try { const u = new URL(url); return u.pathname + u.search || '/'; } catch { return url; } };
 
 export default function FrictionPage() {
-  const { days } = useFilters();
+  const { rangeQs } = useFilters();
   const [sort, setSort] = useState('any');
   const [minSessions, setMinSessions] = useState(5);
-  const { data, error, loading, reload } = useApiData<Friction>(`/dashboard/friction?days=${days}&sort=${sort}&minSessions=${minSessions}`);
+  const { data, error, loading, reload } = useApiData<Friction>(`/dashboard/friction?${rangeQs}&sort=${sort}&minSessions=${minSessions}`);
 
   return (
     <AnalyticsPage>

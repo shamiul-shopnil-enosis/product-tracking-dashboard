@@ -29,6 +29,8 @@ const healthy = (req: any) => {
   const dims: string[] = req.dimensions.map((d: any) => d.name);
   if (metrics[0] === 'keyEvents' && dims.includes('eventName')) return report(dims, metrics, [[['20260101', 'sign_up'], ['3']], [['20260101', 'page_view'], ['0']]]);
   if (metrics[0] === 'keyEvents') return report(dims, metrics, [[['20260101'], ['4']], [['20260102'], ['6']]]);
+  if (dims.length === 2 && !dims.includes('landingPage') && !dims.includes('sessionDefaultChannelGroup')) return report(dims, metrics, [[['20260101', 'X'], metrics.map(() => '5')]]);
+  if (dims.length === 1 && metrics.length !== 7) return report(dims, metrics, [[['20260101'], metrics.map(() => '7')]]);
   if (dims.includes('landingPage')) return report(dims, metrics, [[['20260101', '/'], ['10', '5']], [['20260102', '/'], ['12', '6']]]);
   if (dims.includes('sessionDefaultChannelGroup')) return report(dims, metrics, [[['20260101', 'Direct'], ['10', '5', '8']]]);
   return report(dims, metrics, [[['20260101'], ['100', '80', '20', '60', '200', '500', '4000']], [['20260102'], ['120', '90', '25', '70', '240', '600', '4800']]]);
@@ -47,7 +49,7 @@ describe('Ga4SyncService.run', () => {
     expect(runDoc.status).toBe('success');
     expect(stored.filter((s) => s.filter.breakdown === 'event')).toHaveLength(1);
     expect(stored.find((s) => s.filter.breakdown === 'event')!.payload).toEqual([{ eventName: 'sign_up', keyEvents: 3 }]); // zero rows dropped
-    expect(runDoc.callsUsed).toBe(5); // totals, key events, channel, landing, events by name
+    expect(runDoc.callsUsed).toBe(18); // totals + key events, channel, landing, events by name, 3 organic, 10 audience
   });
 
   it('asks GA4 for the right range and property', async () => {
@@ -91,5 +93,17 @@ describe('Ga4SyncService.run', () => {
     const none = stored.find((s) => s.filter.breakdown === 'none');
     expect(none.filter.date < today).toBe(true);
     expect(none.approximate).toBe(true);
+  });
+});
+
+describe('Ga4SyncService.run with a subset and the organic filter', () => {
+  it('reads only the asked reports and sends the organic filter only for organic ones', async () => {
+    const seen: any[] = [];
+    const { svc, runDoc } = setup({ runner: (req) => { seen.push(req); return healthy(req); } });
+    await svc.run('backfill', 90, ['organic', 'all_country']);
+    expect(seen).toHaveLength(2);
+    expect(seen[0].dimensionFilter.filter).toMatchObject({ fieldName: 'sessionDefaultChannelGroup', stringFilter: { value: 'Organic Search' } });
+    expect(seen[1].dimensionFilter).toBeUndefined();
+    expect(runDoc.status).toBe('success');
   });
 });

@@ -1,8 +1,8 @@
 import { alertText, MaintenanceService } from './maintenance.service';
 
-const svc = (runs: unknown[], clarity = true, ga4 = false) => {
+const svc = (runs: unknown[], clarity = true, ga4 = false, speed = false) => {
   const model = { find: () => ({ sort: () => ({ limit: async () => runs }) }) };
-  return new MaintenanceService({ get: () => undefined } as never, { enabled: clarity } as never, { enabled: ga4 } as never, model as never);
+  return new MaintenanceService({ get: () => undefined } as never, { enabled: clarity } as never, { enabled: ga4 } as never, { enabled: async () => speed } as never, model as never);
 };
 
 describe('MaintenanceService', () => {

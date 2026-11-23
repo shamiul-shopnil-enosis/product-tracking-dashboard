@@ -3,17 +3,20 @@
 import { Icon } from './Icon';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { formatChange, formatValue, type KeyEventsResponse, type Overview, type PagesResponse } from '@/lib/dashboard';
+import { formatChange, formatValue, type KeyEventsResponse, type Overview, type PagesResponse, type SeoResponse } from '@/lib/dashboard';
 import { BAND_LABEL, type FindingList } from '@/lib/findings';
 import { useApiData } from '@/lib/useApi';
 import { Tip } from './Tip';
+import { Tile } from './Tile';
+import { PinButton } from './PinButton';
+import { SourceIcon } from './SourceIcon';
 
 const label = (url: string) => { try { const u = new URL(url); return u.pathname === '/' ? u.host : u.pathname; } catch { return url; } };
 const Empty = ({ children }: { children: string }) => <p className="muted" style={{ margin: 0 }}>{children}</p>;
 
 /** How many times each important action (key event) happened, biggest first. */
-export function KeyEventsBlock({ days }: { days: number }) {
-  const { data } = useApiData<KeyEventsResponse>(`/dashboard/ga4-key-events?days=${days}`);
+export function KeyEventsBlock({ qs }: { qs: string }) {
+  const { data } = useApiData<KeyEventsResponse>(`/dashboard/ga4-key-events?${qs}`);
   const top = data?.rows.slice(0, 5) ?? [];
   return (
     <section className="block" aria-label="Key events">
@@ -32,8 +35,8 @@ export function KeyEventsBlock({ days }: { days: number }) {
 }
 
 /** The three pages with the most visits. */
-export function TopPagesBlock({ days }: { days: number }) {
-  const { data } = useApiData<PagesResponse>(`/dashboard/pages?days=${days}&sort=sessions&minSessions=5`);
+export function TopPagesBlock({ qs }: { qs: string }) {
+  const { data } = useApiData<PagesResponse>(`/dashboard/pages?${qs}&sort=sessions&minSessions=5`);
   const top = data?.pages.slice(0, 3) ?? [];
   return (
     <section className="block" aria-label="Top pages">
@@ -112,11 +115,24 @@ export function LiveTile() {
   return (
     <div className="tile live" aria-label="Active users right now">
       <div className="tile-top">
-        <span>Active right now</span>
-        <Tip label="Active right now">People using the site in the last {data.windowMinutes} minutes, according to Google Analytics. Updates every minute. It includes automated visitors GA4 does not recognise.</Tip>
+        <span className="tile-label no-ico"><span>Active right now</span><SourceIcon source="ga4" /></span>
+        <span className="tile-tools"><PinButton cardKey="live" label="Active right now" /><Tip label="Active right now">People using the site in the last {data.windowMinutes} minutes, according to Google Analytics. Updates every minute. It includes automated visitors GA4 does not recognise.</Tip></span>
       </div>
       <div className="tile-value"><i className="dot pulse" aria-hidden /> {formatValue(data.activeUsers, 'count')}</div>
       <div className="prev">last {data.windowMinutes} minutes · GA4</div>
     </div>
+  );
+}
+
+/** The search tiles for the Overview: organic sessions per day, organic share of traffic and new organic users. */
+export function SeoTiles({ qs, only }: { qs: string; /** Show just these tiles */ only?: string[] }) {
+  const { data } = useApiData<SeoResponse>(`/dashboard/seo?${qs}`);
+  if (!data || !data.connected) return null;
+  return (
+    <>
+      {data.tiles.filter((t) => (only ?? ['orgSessions', 'orgShare', 'orgNew']).includes(t.key)).map((t) => (
+        <Tile key={t.key} tile={t} color="var(--s3)" spark={t.key === 'orgSessions' ? data.series.map((p) => p.organicSessions) : undefined} />
+      ))}
+    </>
   );
 }

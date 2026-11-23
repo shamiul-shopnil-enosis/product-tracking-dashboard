@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MetricSnapshot, MetricSnapshotDocument } from './analytics.schema';
-import { Aggregate, aggregate, daysBetween, pctChange, periodsFor, Trend, trendOf } from './aggregate';
+import { Aggregate, aggregate, daysBetween, pctChange, periodsFor, Span, spanDays, Trend, trendOf } from './aggregate';
 import { AnnotationsService } from './annotations.service';
 import { findAlerts, mergeAlerts } from './alerts';
 import { buildHeadline, buildInsight } from './headline';
@@ -53,8 +53,8 @@ export class DashboardService {
   }
 
   /** The two equal periods ending on the latest full UTC day: the current one and the one before it. */
-  private ranges(days: number) {
-    return periodsFor(days);
+  private ranges(span: Span) {
+    return periodsFor(span);
   }
 
   private async loadDays(from: string, to: string, breakdown: string, provider = PROVIDER) {
@@ -145,8 +145,10 @@ export class DashboardService {
     };
   }
 
-  async overview(days = 14, traffic: 'human' | 'all' = 'human', threshold = 20) {
-    const r = this.ranges(days);
+  async overview(span: Span = 14, traffic: 'human' | 'all' = 'human', threshold = 20) {
+    const r = this.ranges(span);
+    const days = spanDays(span);
+    const against = typeof span === 'number' || !span.compareFrom ? days : 'the period you chose';
     const [curDocs, prevDocs, latest, gCurDocs, gPrevDocs] = await Promise.all([
       this.loadDays(r.from, r.to, 'none'),
       this.loadDays(r.previousFrom, r.previousTo, 'none'),
@@ -191,9 +193,9 @@ export class DashboardService {
       ),
       // The headline speaks for Clarity's human traffic; it uses GA4 only when Clarity has nothing to compare
       headline: (() => {
-        const h = buildHeadline(clarityTiles, days);
+        const h = buildHeadline(clarityTiles, against);
         // With no Clarity history to compare, GA4 (which has long history) can still answer the question
-        const base = !clarityTiles.some((t) => t.change !== null) && ga4TileList.some((t) => t.change !== null) ? buildHeadline(ga4TileList, days) : h;
+        const base = !clarityTiles.some((t) => t.change !== null) && ga4TileList.some((t) => t.change !== null) ? buildHeadline(ga4TileList, against) : h;
         return base;
       })(),
       // What the changes probably mean, in one sentence, or empty when nothing needs interpreting
@@ -210,8 +212,9 @@ export class DashboardService {
     };
   }
 
-  async friction(days = 14, sort = 'any', minSessions = 5) {
-    const r = this.ranges(days);
+  async friction(span: Span = 14, sort = 'any', minSessions = 5) {
+    const r = this.ranges(span);
+    const days = spanDays(span);
     const [curDocs, prevDocs, urlDocs] = await Promise.all([
       this.loadDays(r.from, r.to, 'none'),
       this.loadDays(r.previousFrom, r.previousTo, 'none'),

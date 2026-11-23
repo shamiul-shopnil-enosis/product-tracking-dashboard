@@ -15,6 +15,15 @@ const METRICS: Array<[string, string]> = [
   ['Key events per day (GA4)', 'How often visitors did something you marked as important in Google Analytics, such as signing up.'],
   ['Channel', 'The kind of source a visit came from: search, direct (no referrer known), social, referral and so on.'],
   ['Landing page', 'The first page of a visit. Only GA4 can tell this.'],
+  ['Organic search', 'Visits that arrived by clicking a search engine result (not an ad). GA4 can tell how many, but not which words were typed or where the page ranked.'],
+  ['Organic share of traffic', 'The part of all visits that came from search. It moves when other traffic changes, so it has no good or bad colour; judge search by organic sessions per day.'],
+  ['Audience', 'Country, city, device, browser and language of visitors, from Google Analytics. Low engagement on a large row usually means automated visits.'],
+  ['Core Web Vitals', 'Google’s three measures of page speed and steadiness: LCP, INP and CLS. A page passes when all three are Good for at least 3 in 4 real visits. Google uses them in search ranking. See the Speed page.'],
+  ['LCP (Largest Contentful Paint)', 'How long until the biggest thing on the page is on screen. Good is 2.5 seconds or less.'],
+  ['INP (Interaction to Next Paint)', 'How quickly the page reacts to a click, tap or key press. Good is 200 milliseconds or less. A test run cannot measure it, so the test run shows Total Blocking Time instead.'],
+  ['CLS (Cumulative Layout Shift)', 'How much the page jumps around while loading. Good is 0.1 or less; lower is better.'],
+  ['Real visitors vs test run', 'Real visitors: what Chrome users actually experienced over the last 28 days, from Google. It changes slowly. Test run: one fresh Lighthouse test, which shows what to fix but moves from run to run.'],
+  ['Performance score', 'Lighthouse’s overall speed score out of 100 from one test run: 90 and above is good, 50 to 89 needs work, below 50 is poor.'],
   ['Per day vs before', 'Sessions per day in the chosen range compared with sessions per day in the equal range just before it.'],
 ];
 
@@ -31,7 +40,7 @@ export default function HelpPage() {
       <dl>{METRICS.map(([name, text]) => <div key={name}><dt>{name}</dt><dd>{text}</dd></div>)}</dl>
 
       <h2>Comparing with the previous period</h2>
-      <p>Every change is measured against the period of the same length just before. With a 14 day range, that is the 14 days before the range. Tiles use per-day averages and rates, so a missing day does not look like a drop. The arrow and the words next to a change say whether it is better or worse, not only the colour.</p>
+      <p>Every change is measured against the comparison period you choose in the date picker at the top right. By default that is the period of the same length just before: with a 14 day range, the 14 days before it. You can instead compare with the same dates last year or with any dates you pick, or turn Compare off. Today is never included because it is not finished. Tiles use per-day averages and rates, so a missing day does not look like a drop. The arrow and the words next to a change say whether it is better or worse, not only the colour.</p>
 
       <h2>Alerts</h2>
       <p>“Needs attention” lists metrics that moved by at least the chosen percentage. Nothing is flagged until both periods have at least 3 days of data and there are at least 200 human sessions. Rates built on fewer than 10 sessions are never flagged, because a change from 1 session to 2 is not a trend.</p>

@@ -21,11 +21,11 @@ const SORTS = [
 const label = (url: string) => { try { const u = new URL(url); return u.host + (u.pathname === '/' ? '' : u.pathname); } catch { return url; } };
 
 export default function PagesPage() {
-  const { days } = useFilters();
+  const { rangeQs } = useFilters();
   const [sort, setSort] = useState('sessions');
   const [minSessions, setMinSessions] = useState(5);
-  const { data, error, loading, reload } = useApiData<PagesResponse>(`/dashboard/pages?days=${days}&sort=${sort}&minSessions=${minSessions}`);
-  const landing = useApiData<LandingResponse>(`/dashboard/landing-pages?days=${days}&minSessions=${minSessions}`).data;
+  const { data, error, loading, reload } = useApiData<PagesResponse>(`/dashboard/pages?${rangeQs}&sort=${sort}&minSessions=${minSessions}`);
+  const landing = useApiData<LandingResponse>(`/dashboard/landing-pages?${rangeQs}&minSessions=${minSessions}`).data;
 
   return (
     <AnalyticsPage>

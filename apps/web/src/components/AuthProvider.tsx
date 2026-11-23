@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { api, ApiError, type User } from '@/lib/api';
+import { isPublicPath } from '@/lib/publicPaths';
 
 type AuthState = { user: User | null; loading: boolean; logout: () => Promise<void> };
 const Ctx = createContext<AuthState>({ user: null, loading: true, logout: async () => {} });
@@ -11,6 +12,7 @@ export const useAuth = () => useContext(Ctx);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const wasSignedIn = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -18,11 +20,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setLoading(true);
     api<User>('/auth/me')
-      .then((u) => !cancelled && setUser(u))
+      .then((u) => {
+        if (cancelled) return;
+        wasSignedIn.current = true;
+        setUser(u);
+      })
       .catch((e) => {
         if (cancelled) return;
         setUser(null);
-        if (e instanceof ApiError && e.status === 401 && pathname !== '/login') router.replace('/login');
+        if (e instanceof ApiError && e.status === 401 && !isPublicPath(pathname)) {
+          // Someone who was signed in and got cut off is told why; a first visit just lands on sign-in.
+          router.replace(wasSignedIn.current ? '/login?reason=ended' : '/login');
+        }
       })
       .finally(() => !cancelled && setLoading(false));
     return () => {
@@ -31,9 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [pathname, router]);
 
   const logout = useCallback(async () => {
-    await api('/auth/logout', { method: 'POST' });
-    setUser(null);
-    router.replace('/login');
+    try {
+      await api('/auth/logout', { method: 'POST' });
+    } finally {
+      wasSignedIn.current = false;
+      setUser(null);
+      router.replace('/login?reason=signedout');
+    }
   }, [router]);
 
   return <Ctx.Provider value={{ user, loading, logout }}>{children}</Ctx.Provider>;

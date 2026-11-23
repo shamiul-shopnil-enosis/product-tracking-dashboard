@@ -39,8 +39,8 @@ export default function TrafficPage() {
 }
 
 function Ga4Traffic() {
-  const { days } = useFilters();
-  const { data, error, loading, reload } = useApiData<Ga4ChannelsResponse>(`/dashboard/ga4-channels?days=${days}`);
+  const { rangeQs } = useFilters();
+  const { data, error, loading, reload } = useApiData<Ga4ChannelsResponse>(`/dashboard/ga4-channels?${rangeQs}`);
   const max = data ? Math.max(1, ...data.rows.map((r) => r.share ?? 0)) : 1;
   return (
     <>
@@ -83,9 +83,9 @@ function Ga4Traffic() {
 }
 
 function ClarityTraffic() {
-  const { days } = useFilters();
+  const { rangeQs } = useFilters();
   const [dimension, setDimension] = useState('channel');
-  const { data, error, loading, reload } = useApiData<Breakdown>(`/dashboard/breakdown?dimension=${dimension}&days=${days}`);
+  const { data, error, loading, reload } = useApiData<Breakdown>(`/dashboard/breakdown?dimension=${dimension}&${rangeQs}`);
   const max = data ? Math.max(1, ...data.rows.map((r) => r.share ?? 0)) : 1;
 
   return (

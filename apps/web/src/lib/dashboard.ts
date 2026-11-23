@@ -117,3 +117,21 @@ export type Ga4ChannelsResponse = {
 
 export type KeyEventRow = { name: string; count: number; share: number | null; perDay: number | null; previousPerDay: number | null; change: number | null };
 export type KeyEventsResponse = { connected: boolean; range: Range; rows: KeyEventRow[]; total: number; perDay: number | null };
+
+export type DimRow = { name: string; sessions: number; share: number | null; engagementRate: number | null; perDay: number | null; previousPerDay: number | null; change: number | null };
+export type SeoResponse = {
+  connected: boolean; range: Range; annotations: Marker[];
+  coverage: { current: Coverage; previous: Coverage };
+  tiles: Tile[];
+  series: { date: string; organicSessions: number | null; allSessions: number | null; organicShare: number | null; organicEngagementRate: number | null; organicKeyEvents: number | null; newOrganicUsers: number | null }[];
+  engines: DimRow[];
+  landing: (Omit<DimRow, 'name'> & { page: string })[];
+  notes: { source: string };
+};
+export type DemographicsResponse = {
+  connected: boolean; range: Range; annotations: Marker[];
+  coverage: { current: Coverage; previous: Coverage };
+  organic: boolean; rows: DimRow[]; totalSessions: number;
+  chart: { series: { id: string; label: string }[]; points: Record<string, string | number | null>[] };
+  notes: { source: string };
+};

@@ -1,7 +1,7 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { AuthUser, CurrentUser, MinRole } from '../common/decorators';
 import { Role } from '../common/roles';
-import { CreateUserDto, ResetPasswordDto, UpdateUserDto } from './users.dto';
+import { InviteUserDto, UpdateUserDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -14,9 +14,16 @@ export class UsersController {
     return this.users.list();
   }
 
+  /** Add a person. The response carries their one-time invite token, shown to the admin once. */
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.users.create(dto);
+  invite(@Body() dto: InviteUserDto) {
+    return this.users.invite(dto);
+  }
+
+  /** A fresh invite (not yet accepted) or password-reset link; replaces any earlier link. */
+  @Post(':id/link')
+  link(@Param('id') id: string) {
+    return this.users.issueLink(id);
   }
 
   @Patch(':id')
@@ -26,11 +33,5 @@ export class UsersController {
       throw new BadRequestException('You cannot demote or deactivate your own account');
     }
     return this.users.update(id, dto);
-  }
-
-  @Post(':id/password')
-  @HttpCode(204)
-  async resetPassword(@Param('id') id: string, @Body() dto: ResetPasswordDto) {
-    await this.users.setPassword(id, dto.password);
   }
 }

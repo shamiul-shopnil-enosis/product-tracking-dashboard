@@ -4,7 +4,9 @@ import {
   MdOutlineStorage, MdOutlinePeople, MdOutlineLightMode, MdOutlineDarkMode, MdOutlineLogout, MdOutlinePersonOutline,
   MdOutlineSchedule, MdOutlineVisibility, MdOutlineTouchApp, MdOutlineSwipeVertical, MdOutlineTimer, MdOutlineExitToApp,
   MdOutlineStarBorder, MdOutlineSentimentVeryDissatisfied, MdOutlineAdsClick, MdOutlineWarningAmber, MdOutlineUndo,
-  MdOutlineSensors, MdOutlineAdd, MdOutlineBarChart,
+  MdOutlineSensors, MdOutlineAdd, MdOutlineBarChart, MdOutlineSearch, MdOutlinePublic,
+  MdOutlineSpeed, MdOutlineManageAccounts, MdOutlineVisibilityOff, MdOutlineContentCopy, MdOutlineLink, MdOutlineCheck,
+  MdOutlineCalendarToday, MdOutlineChevronLeft, MdOutlineChevronRight, MdOutlineExpandMore, MdOutlineClose, MdOutlineFileDownload
 } from 'react-icons/md';
 
 // Google Material Design icons (outlined set) via react-icons. Colour comes from currentColor.
@@ -34,6 +36,21 @@ const ICONS = {
   quickback: MdOutlineUndo,
   live: MdOutlineSensors,
   plus: MdOutlineAdd,
+  seo: MdOutlineSearch,
+  audience: MdOutlinePublic,
+  speed: MdOutlineSpeed,
+  account: MdOutlineManageAccounts,
+  eye: MdOutlineVisibility,
+  eyeOff: MdOutlineVisibilityOff,
+  copy: MdOutlineContentCopy,
+  link: MdOutlineLink,
+  check: MdOutlineCheck,
+  calendar: MdOutlineCalendarToday,
+  chevronLeft: MdOutlineChevronLeft,
+  chevronRight: MdOutlineChevronRight,
+  chevronDown: MdOutlineExpandMore,
+  close: MdOutlineClose,
+  download: MdOutlineFileDownload,
   generic: MdOutlineBarChart,
 } satisfies Record<string, IconType>;
 
@@ -59,6 +76,7 @@ export function metricStyle(key: string, label: string): { icon: IconName; accen
     rule(/active|live|now|realtime/, 'live', 'var(--good)') ||
     rule(/key.?event|conversion|event|goal/, 'event', 'var(--s4)') ||
     rule(/user|visitor|people/, 'visitors', 'var(--s1)') ||
+    rule(/organic/, 'seo', 'var(--s3)') ||
     rule(/session|visit/, 'sessions', 'var(--s1)') ||
     rule(/page|view|screen/, 'views', 'var(--s3)') ||
     rule(/click/, 'click', 'var(--s2)') ||

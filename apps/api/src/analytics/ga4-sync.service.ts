@@ -42,10 +42,13 @@ export class Ga4SyncService implements OnApplicationBootstrap {
 
   async startup() {
     if (!this.enabled) return;
-    const has = await this.snapshots.exists({ provider: PROVIDER, window: 'day', breakdown: 'none' });
-    // A report added later (key events by name) has no history yet: read the history once for it.
-    const eventsRead = await this.runs.exists({ provider: PROVIDER, results: { $elemMatch: { breakdown: 'event', outcome: 'ok' } } });
-    if (!has || !eventsRead) return void (await this.run('backfill', GA4_BACKFILL_DAYS));
+    // A report added later (key events by name, SEO, audience) has no history yet: read 90 days for just that report.
+    // Checked per report from stored days, so a report that keeps failing never makes every restart re-read the others.
+    const missing: string[] = [];
+    for (const key of GA4_BREAKDOWNS) {
+      if (!(await this.snapshots.exists({ provider: PROVIDER, window: 'day', breakdown: key }))) missing.push(key);
+    }
+    if (missing.length) return void (await this.run('backfill', GA4_BACKFILL_DAYS, missing));
     const last = await this.runs.findOne({ provider: PROVIDER, status: { $in: ['success', 'partial'] } }).sort({ startedAt: -1 });
     if (!last || Date.now() - last.startedAt.getTime() > FRESH_MS) await this.run('cron', GA4_RECENT_DAYS);
   }
@@ -67,7 +70,7 @@ export class Ga4SyncService implements OnApplicationBootstrap {
     return this.run('manual', days);
   }
 
-  async run(trigger: Trigger, days: number): Promise<SyncRunDocument> {
+  async run(trigger: Trigger, days: number, only?: readonly string[]): Promise<SyncRunDocument> {
     const problem = this.client.problem;
     if (problem) throw new ConflictException(problem);
     const running = await this.runs.findOne({ provider: PROVIDER, status: 'running', startedAt: { $gte: new Date(Date.now() - STALE_RUN_MS) } });
@@ -78,11 +81,12 @@ export class Ga4SyncService implements OnApplicationBootstrap {
     const today = utcDay(new Date());
     const opts = { settleDays: GA4_SETTLE_DAYS, landingPerDay: GA4_LANDING_PER_DAY };
 
-    for (const key of GA4_BREAKDOWNS) {
+    const keys = only ?? GA4_BREAKDOWNS;
+    for (const key of keys) {
       const def = GA4_REPORTS[key];
       try {
         run.callsUsed += 1;
-        let rows = rowsFromReport(await this.client.reportAll({ ...range, dimensions: def.dimensions, metrics: def.metrics }));
+        let rows = rowsFromReport(await this.client.reportAll({ ...range, dimensions: def.dimensions, metrics: def.metrics, organicOnly: def.organic }));
         if (key === 'none') {
           try {
             run.callsUsed += 1;
@@ -112,7 +116,7 @@ export class Ga4SyncService implements OnApplicationBootstrap {
     }
 
     const ok = run.results.filter((r) => r.outcome === 'ok').length;
-    run.status = ok === GA4_BREAKDOWNS.length ? 'success' : ok > 0 ? 'partial' : 'failed';
+    run.status = ok === keys.length ? 'success' : ok > 0 ? 'partial' : 'failed';
     run.finishedAt = new Date();
     await run.save();
     this.logger.log(`GA4 ${trigger} sync ${run.status}: ${days} day(s), ${run.callsUsed} report(s)`);

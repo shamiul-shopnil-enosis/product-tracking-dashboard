@@ -269,3 +269,28 @@ describe('Ga4Client.realtimeUsers', () => {
     await expect(client.realtimeUsers()).rejects.toThrow('refused the service account');
   });
 });
+
+import { withRemainder } from './ga4';
+describe('withRemainder', () => {
+  const rows = [
+    { country: 'A', sessions: 10, engagedSessions: 5, activeUsers: 9 },
+    { country: 'B', sessions: 5, engagedSessions: 1, activeUsers: 4 },
+    { country: 'C', sessions: 3, engagedSessions: 1, activeUsers: 3 },
+    { country: 'D', sessions: 2, engagedSessions: 0, activeUsers: 2 },
+  ];
+  it('folds the smaller values into one row and sums only sessions', () => {
+    const out = withRemainder(rows, 'country', 2);
+    expect(out).toHaveLength(3);
+    expect(out[2]).toEqual({ country: '(other)', sessions: 5, engagedSessions: 1 });
+  });
+  it('adds nothing when everything fits', () => {
+    expect(withRemainder(rows, 'country', 10)).toHaveLength(4);
+  });
+  it('is used for audience breakdowns but not for plain ones', () => {
+    const wide = Array.from({ length: 60 }, (_, i) => ({ date: '2026-01-01', country: `C${i}`, sessions: 100 - i, engagedSessions: 1 }));
+    const [day] = buildSnapshots('all_country', wide as never, '2026-02-01', { settleDays: 2, landingPerDay: 50 });
+    expect(day.payload).toHaveLength(51);
+    const [plain] = buildSnapshots('channel', wide as never, '2026-02-01', { settleDays: 2, landingPerDay: 50 });
+    expect(plain.payload).toHaveLength(60);
+  });
+});

@@ -14,7 +14,16 @@ import { Ga4SyncService } from './ga4-sync.service';
 import { DashboardService } from './dashboard.service';
 import { MaintenanceService } from './maintenance.service';
 import { ExploreService } from './explore.service';
-import { MetricSnapshot, MetricSnapshotSchema, SyncRun, SyncRunSchema } from './analytics.schema';
+import {
+  AppSetting, AppSettingSchema, MetricSnapshot, MetricSnapshotSchema, SpeedAudits, SpeedAuditsSchema, SpeedJob, SpeedJobSchema, SpeedResult, SpeedResultSchema,
+  SpeedTarget, SpeedTargetSchema, SyncRun, SyncRunSchema,
+} from './analytics.schema';
+import { PsiClient } from './psi.client';
+import { SpeedController } from './speed.controller';
+import { SpeedService } from './speed.service';
+import { DashboardLayout, DashboardLayoutSchema } from './layout.schema';
+import { LayoutController } from './layout.controller';
+import { LayoutService } from './layout.service';
 import { ClarityClient } from './clarity.client';
 import { ClaritySyncService } from './clarity-sync.service';
 
@@ -26,10 +35,16 @@ import { ClaritySyncService } from './clarity-sync.service';
       { name: SyncRun.name, schema: SyncRunSchema },
       { name: Annotation.name, schema: AnnotationSchema },
       { name: Finding.name, schema: FindingSchema },
+      { name: SpeedTarget.name, schema: SpeedTargetSchema },
+      { name: SpeedResult.name, schema: SpeedResultSchema },
+      { name: SpeedAudits.name, schema: SpeedAuditsSchema },
+      { name: SpeedJob.name, schema: SpeedJobSchema },
+      { name: DashboardLayout.name, schema: DashboardLayoutSchema },
+      { name: AppSetting.name, schema: AppSettingSchema },
     ]),
   ],
-  controllers: [AnalyticsController, DashboardController, AnnotationsController, Ga4Controller],
-  providers: [ClarityClient, ClaritySyncService, Ga4Client, Ga4SyncService, DashboardService, ExploreService, AnnotationsService, FindingLinksService, MaintenanceService],
-  exports: [ClaritySyncService, Ga4SyncService],
+  controllers: [AnalyticsController, DashboardController, AnnotationsController, Ga4Controller, SpeedController, LayoutController],
+  providers: [ClarityClient, ClaritySyncService, Ga4Client, Ga4SyncService, DashboardService, ExploreService, AnnotationsService, FindingLinksService, MaintenanceService, PsiClient, SpeedService, LayoutService],
+  exports: [ClaritySyncService, Ga4SyncService, SpeedService],
 })
 export class AnalyticsModule {}

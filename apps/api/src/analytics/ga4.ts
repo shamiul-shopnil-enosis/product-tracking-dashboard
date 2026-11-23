@@ -3,6 +3,8 @@
  *   dimensionHeaders: [{ name }], metricHeaders: [{ name }], rows: [{ dimensionValues: [{ value }], metricValues: [{ value }] }]
  * Dates come back as YYYYMMDD.
  */
+import { GA4_REPORTS, OTHER_VALUES } from './ga4.constants';
+
 export interface Ga4Response {
   /** Total rows the report has, across all pages */
   rowCount?: number | null;
@@ -131,6 +133,27 @@ export interface StoredDay {
   approximate: boolean;
 }
 
+function payloadFor(breakdown: string, dayRows: Array<Record<string, string | number>>, landingPerDay: number) {
+  if (breakdown === 'landing' || breakdown === 'org_landing') return landingWithRemainder(dayRows, landingPerDay);
+  if (breakdown === 'event') return dayRows.filter((r) => num(r.keyEvents) > 0);
+  const rem = GA4_REPORTS[breakdown]?.remainder;
+  return rem ? withRemainder(dayRows, rem.key, rem.keep) : dayRows;
+}
+
+/**
+ * The busiest values of a day plus one "(other)" row. Only sessions and engaged sessions are summed into it:
+ * users would double count, and those are the only numbers the tables show.
+ */
+export function withRemainder(rows: Array<Record<string, string | number>>, nameKey: string, keep: number) {
+  const top = topRows(rows, 'sessions', keep);
+  const rest = rows.filter((r) => !top.includes(r));
+  if (rest.length === 0) return top;
+  return [
+    ...top,
+    { [nameKey]: OTHER_VALUES, sessions: rest.reduce((s, r) => s + num(r.sessions), 0), engagedSessions: rest.reduce((s, r) => s + num(r.engagedSessions), 0) },
+  ];
+}
+
 /** Turn one report's rows into one stored snapshot per day. */
 export function buildSnapshots(
   breakdown: string,
@@ -143,9 +166,7 @@ export function buildSnapshots(
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([date, dayRows]) => ({
       date,
-      payload: breakdown === 'landing'
-        ? landingWithRemainder(dayRows, opts.landingPerDay)
-        : breakdown === 'event' ? dayRows.filter((r) => num(r.keyEvents) > 0) : dayRows,
+      payload: payloadFor(breakdown, dayRows, opts.landingPerDay),
       approximate: date >= settledBefore,
     }));
 }

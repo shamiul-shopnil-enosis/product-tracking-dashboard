@@ -3,17 +3,23 @@ import { Role } from '../common/roles';
 
 export const MIN_PASSWORD_LENGTH = 10;
 
-export class CreateUserDto {
+/** Admin adds a person by name, email and role. They choose their own password through an invite link. */
+export class InviteUserDto {
   @IsString() @MinLength(1) @MaxLength(100)
   name: string;
 
   @IsEmail() @MaxLength(200)
   email: string;
 
-  @IsString() @MinLength(MIN_PASSWORD_LENGTH) @MaxLength(200)
-  password: string;
-
   @IsEnum(Role)
+  role: Role;
+}
+
+/** Internal shape used for the first admin created from the environment. */
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
   role: Role;
 }
 
@@ -26,9 +32,4 @@ export class UpdateUserDto {
 
   @IsOptional() @IsBoolean()
   active?: boolean;
-}
-
-export class ResetPasswordDto {
-  @IsString() @MinLength(MIN_PASSWORD_LENGTH) @MaxLength(200)
-  password: string;
 }
