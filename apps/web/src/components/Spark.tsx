@@ -11,8 +11,8 @@ export function Spark({ values, color = 'var(--s1)', width = 80, height = 26 }: 
   const last = pts[pts.length - 1];
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-      <path d={d} fill="none" stroke={color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={x(last.i)} cy={y(last.v)} r={3} fill={color} stroke="var(--surface)" strokeWidth={1.5} />
+      <path key={d} className="spark-line" pathLength={1} d={d} fill="none" stroke={color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" />
+      <circle key={`${d}-dot`} className="spark-dot" cx={x(last.i)} cy={y(last.v)} r={3} fill={color} stroke="var(--surface)" strokeWidth={1.5} />
     </svg>
   );
 }

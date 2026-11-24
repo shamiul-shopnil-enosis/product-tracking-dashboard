@@ -4,7 +4,7 @@ import { bandOf } from '@/lib/change';
 const MAP = {
   better: { icon: '▲', word: 'better' },
   worse: { icon: '▼', word: 'worse' },
-  flat: { icon: '■', word: 'about the same' },
+  flat: { icon: '■', word: 'steady' },
   unknown: { icon: '–', word: 'no earlier period' },
 } as const;
 

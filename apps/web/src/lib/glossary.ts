@@ -14,6 +14,7 @@ export const G = {
   rageClicks: { term: 'Rage clicks', text: 'Several fast clicks in the same spot. A strong sign of frustration, for example a broken button or a slow page.' },
   scriptErrors: { term: 'Script errors', text: 'The page’s code failed while the visitor was using it. Something on the page may not have worked.' },
   engagement: { term: 'Engagement rate', text: 'Share of sessions that were real visits: longer than 10 seconds, or at least 2 pages, or a key event. A very low rate on a big source suggests automated traffic.' },
+  recordings: { term: 'Recordings', text: 'Open takes you to the recordings of exactly this page in Clarity (a new tab), going back as far as the dates chosen at the top. Clarity keeps recordings for 30 days. The filter is “Visited URL is exactly”, so visits to the same page with extra text on the address may be missing; change the filter in Clarity to “contains” to include them.' },
   findings: { term: 'Findings', text: 'Issues your team has logged for this page. Click to open them.' },
   friction: { term: 'Number (percent)', text: 'In the friction columns, the number is how many sessions were affected and the percent is that number as a share of the page’s sessions.' },
 } satisfies Record<string, GuideItem>;

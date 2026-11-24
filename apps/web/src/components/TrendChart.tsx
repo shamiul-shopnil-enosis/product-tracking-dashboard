@@ -5,6 +5,7 @@ import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContai
 import { Tip } from './Tip';
 import { formatValue, type Marker, type Unit } from '@/lib/dashboard';
 import { fmtDate } from '@/lib/date';
+import { useReducedMotion } from '@/lib/motion';
 
 type DataPoint = Record<string, string | number | null>;
 export type SeriesDef = { key: string; label: string; color: string };
@@ -19,6 +20,7 @@ const PREV = '__prev';
 
 export function TrendChart({ title, hint, compactHint, height = 230, unit, points, series, note, markers = [], prev }: Props) {
   const [table, setTable] = useState(false);
+  const reduced = useReducedMotion();
   const data: DataPoint[] = points.map((p, i) => (prev ? { ...p, [PREV]: prev.values[i] ?? null } : p));
   const hasData = points.some((p) => series.some((s) => p[s.key] !== null));
   const visible = markers.filter((m) => points.some((p) => p.date === m.date)); // only days the chart shows
@@ -65,11 +67,11 @@ export function TrendChart({ title, hint, compactHint, height = 230, unit, point
               {legendItems > 1 && <Legend iconType="plainline" wrapperStyle={{ fontSize: 12, color: 'var(--ink-2)' }} />}
               {visible.map((m) => <ReferenceLine key={m.id} x={m.date} stroke="var(--ink-3)" strokeDasharray="3 3" />)}
               {prev && (
-                <Line type="linear" dataKey={PREV} name={prev.label} stroke="var(--ink-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} activeDot={false} connectNulls={false} isAnimationActive={false} />
+                <Line type="linear" dataKey={PREV} name={prev.label} className="chart-prev" stroke="var(--ink-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} activeDot={false} connectNulls={false} isAnimationActive={false} />
               )}
               {series.map((s) => (
                 <Line key={s.label} type="linear" dataKey={s.key} name={s.label} stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"
-                  dot={false} activeDot={{ r: 5, fill: s.color, stroke: 'var(--surface)', strokeWidth: 2 }} connectNulls={false} isAnimationActive={false} />
+                  dot={false} activeDot={{ r: 5, fill: s.color, stroke: 'var(--surface)', strokeWidth: 2 }} connectNulls={false} isAnimationActive={!reduced} animationDuration={450} animationEasing="ease-out" />
               ))}
             </LineChart>
           </ResponsiveContainer>

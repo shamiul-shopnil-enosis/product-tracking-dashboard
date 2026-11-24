@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { useFilters } from '@/lib/filters';
 import { fmtDate } from '@/lib/date';
+import { usePresence } from '@/lib/motion';
 import {
   COMPARE_MODES, MAX_RANGE_DAYS, PRESETS, daysInclusive, deriveCompare, isDay, monthGrid, presetLabel, presetRange, yesterdayOf,
   type CompareMode, type Day, type PresetId,
@@ -39,6 +40,7 @@ export function DateRangePicker() {
   const wrap = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const { mounted, closing } = usePresence(open, 130);
   const [draft, setDraft] = useState<Draft>({ from: r.from, to: r.to, compare: r.compare, mode: r.compareMode, cFrom: r.compareFrom, cTo: r.compareTo });
   const [target, setTarget] = useState<Target>('range');
   const [pending, setPending] = useState<Day | null>(null);
@@ -127,8 +129,8 @@ export function DateRangePicker() {
         <Icon name="chevronDown" size={18} />
       </button>
 
-      {open && (
-        <div className="drp-pop" id={`${uid}-pop`} role="dialog" aria-label="Choose dates">
+      {mounted && (
+        <div className="drp-pop" id={`${uid}-pop`} role="dialog" aria-label="Choose dates" data-state={closing ? 'closing' : 'open'}>
           <div className="drp-side">
             <div className="drp-list" role="group" aria-label="Quick ranges">
               <button type="button" aria-pressed={preset === 'custom'} onClick={() => { setTarget('range'); setPending(null); }}>Custom</button>

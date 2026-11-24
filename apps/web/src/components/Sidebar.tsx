@@ -67,16 +67,16 @@ export function Sidebar() {
                   <span className="navitem"><Icon name={g.icon} size={16} />{g.label}</span>
                 </Link>
                 <button type="button" className="navtoggle" aria-expanded={open} aria-controls={`sub-${g.id}`} aria-label={`${open ? 'Hide' : 'Show'} ${g.label} pages`} onClick={() => setToggled((t) => ({ ...t, [g.id]: !open }))}>
-                  <Icon name={open ? 'chevronDown' : 'chevronRight'} size={16} />
+                  <Icon name="chevronRight" size={16} />
                 </button>
               </div>
-              {open && (
+              <div className={`subnav-wrap${open ? ' open' : ''}`}>
                 <div className="subnav" id={`sub-${g.id}`}>
                   {g.children.map((c) => (
-                    <Link key={c.href} href={c.href + keep} aria-current={current(c.href) ? 'page' : undefined}><span className="navitem">{c.label}</span></Link>
+                    <Link key={c.href} href={c.href + keep} aria-current={current(c.href) ? 'page' : undefined} tabIndex={open ? undefined : -1}><span className="navitem">{c.label}</span></Link>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}

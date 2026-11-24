@@ -40,7 +40,7 @@ describe('SettingsService', () => {
     await expect(svc.setClarity('short', 'a')).rejects.toBeInstanceOf(BadRequestException);
     await expect(svc.setClarity('has a space in it 123456', 'a')).rejects.toBeInstanceOf(BadRequestException);
     const v = await svc.setClarity('  abcdefghij1234567890  ', 'a');
-    expect(v.clarity).toEqual({ configured: true, source: 'screen' });
+    expect(v.clarity).toMatchObject({ configured: true, source: 'screen' });
     expect(JSON.stringify(v)).not.toContain('abcdefghij1234567890');
   });
 
@@ -70,5 +70,21 @@ describe('SettingsService', () => {
     await svc.clearGa4('a');
     expect(cfg.clear).toHaveBeenCalledWith('GA4_KEY_JSON');
     expect(ga4.reset).toHaveBeenCalled();
+  });
+
+  it('takes the Clarity project ID as a code, or from any address that holds it', async () => {
+    const { svc, cfg } = make();
+    expect((await svc.setClarityProject('rn41bqeja2', 'a')).clarity.projectId).toBe('rn41bqeja2');
+    await svc.setClarityProject('https://clarity.microsoft.com/player/RN41BQEJA2/kbbg6k/ufxnm2/?ss=1&sd=2', 'a');
+    expect(cfg.set).toHaveBeenLastCalledWith('CLARITY_PROJECT_ID', 'rn41bqeja2');
+    await svc.setClarityProject('https://clarity.microsoft.com/projects/view/abc123def4/dashboard', 'a');
+    expect(cfg.set).toHaveBeenLastCalledWith('CLARITY_PROJECT_ID', 'abc123def4');
+  });
+
+  it('rejects things that are not a project ID, and can remove it', async () => {
+    const { svc, cfg } = make({ CLARITY_PROJECT_ID: 'rn41bqeja2' });
+    for (const bad of ['', 'short', 'has space in it', 'https://evil.example/projects/view/rn41bqeja2', '<script>']) await expect(svc.setClarityProject(bad, 'a')).rejects.toBeInstanceOf(BadRequestException);
+    await svc.clearClarityProject('a');
+    expect(cfg.clear).toHaveBeenCalledWith('CLARITY_PROJECT_ID');
   });
 });

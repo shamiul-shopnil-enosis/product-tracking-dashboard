@@ -14,6 +14,12 @@ export class RangeQuery {
   @IsOptional() @Type(() => Number) @IsIn([10, 20, 30, 50]) threshold?: number;
 }
 
+export class CardsQuery extends RangeQuery {
+  /** Card keys to make sure are included, or the only ones to return with `only`, separated by commas */
+  @IsOptional() @Matches(/^[A-Za-z0-9_,-]{0,3000}$/) keys?: string;
+  @IsOptional() @IsIn(['1', '0']) only?: string;
+}
+
 export class FrictionQuery extends RangeQuery {
   @IsOptional() @IsIn(['any', 'rage', 'dead', 'quickback', 'scriptError']) sort?: string;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(1000) minSessions?: number;

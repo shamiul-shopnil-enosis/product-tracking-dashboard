@@ -6,7 +6,7 @@ import { DashboardLayout, DashboardLayoutDocument } from './layout.schema';
 /** The cards everyone starts with: the few things that matter most. */
 export const DEFAULT_CARDS = ['live', 'sessions', 'ga4Users', 'ga4Engagement', 'ga4KeyEvents', 'orgSessions'];
 export const MAX_CARDS = 24;
-const KEY = /^[A-Za-z][A-Za-z0-9]{0,39}$/;
+const KEY = /^[A-Za-z][A-Za-z0-9_-]{0,59}$/;
 
 export interface LayoutDto { cards: string[]; isDefault: boolean }
 

@@ -26,7 +26,7 @@ export default function SeoPage() {
         <p>How much traffic comes from search engines, and whether it is growing.</p>
       </div>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
-      {!data && !error && <PageSkeleton />}
+      {!data && !error && <PageSkeleton variant="table" />}
       {data && !data.connected && (
         <div className="notice">No organic search data stored yet. GA4 reads it after the next sync, and an admin can start one under <Link href="/admin/data">Data sources</Link>.</div>
       )}

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { AuthProvider } from '@/components/AuthProvider';
+import { ToastProvider } from '@/components/Toast';
 import faviconDark from '@/assets/favicon-dark.png';
 import faviconLight from '@/assets/favicon-light.png';
 import './globals.css';
@@ -24,9 +25,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
       <body>
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ import { FindingLinks } from '@/components/FindingLinks';
 import { Guide, Hint } from '@/components/Hint';
 import { G } from '@/lib/glossary';
 import { PageSkeleton } from '@/components/Skeleton';
+import { RecordingLink } from '@/components/RecordingLink';
 import Link from 'next/link';
 import { formatChange, formatValue, type LandingResponse, type PagesResponse } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
@@ -39,14 +40,14 @@ export default function PagesPage() {
         </label>
       </div>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
-      {!data && !error && <PageSkeleton />}
+      {!data && !error && <PageSkeleton variant="table" />}
       {data && (
         <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity .15s' }}>
           <CoverageNotice current={data.coverage.current} previous={data.coverage.previous} />
           {data.pages.length > 0 && (
             <div className="table-scroll">
               <table>
-                <thead><tr><th>Page</th><th className="num">Sessions</th><th className="num">Per day vs before</th><th className="num">Pages / session</th><th className="num">Scroll</th><th className="num">Active time</th><th className="num">Quick backs</th><th>Findings</th></tr></thead>
+                <thead><tr><th>Page</th><th className="num">Sessions</th><th className="num">Per day vs before</th><th className="num">Pages / session</th><th className="num">Scroll</th><th className="num">Active time</th><th className="num">Quick backs</th><th>Recordings</th><th>Findings</th></tr></thead>
                 <tbody>
                   {data.pages.map((p) => (
                     <tr key={p.url}>
@@ -57,6 +58,7 @@ export default function PagesPage() {
                       <td className="num">{formatValue(p.scrollDepth, 'percent')}</td>
                       <td className="num">{formatValue(p.activeTime, 'seconds')}</td>
                       <td className="num">{formatValue(p.quickbackRate, 'percent')}</td>
+                      <td><RecordingLink pageUrl={p.url} /></td>
                       <td><FindingLinks url={p.url} open={p.openFindings} /></td>
                     </tr>
                   ))}
@@ -64,7 +66,7 @@ export default function PagesPage() {
               </table>
             </div>
           )}
-          {data.pages.length > 0 && <Guide items={[{ term: 'Sessions', text: 'Visits that viewed this page at least once (Clarity cannot say which page a visit started on; see Landing pages below for that).' }, G.change, G.pagesPerSession, G.scroll, G.activeTime, G.quickBacks, G.findings]} />}
+          {data.pages.length > 0 && <Guide items={[{ term: 'Sessions', text: 'Visits that viewed this page at least once (Clarity cannot say which page a visit started on; see Landing pages below for that).' }, G.change, G.pagesPerSession, G.scroll, G.activeTime, G.quickBacks, G.recordings, G.findings]} />}
           {data.coverage.current.daysWithData > 0 && data.pages.length === 0 && <div className="empty"><b>No pages reach {minSessions} sessions</b>Lower the minimum or choose a longer range.</div>}
           {data.coverage.current.daysWithData > 0 && (
             <p className="muted">

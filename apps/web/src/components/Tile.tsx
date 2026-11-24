@@ -7,6 +7,7 @@ import { formatValue, type Tile as TileData } from '@/lib/dashboard';
 import { Delta } from './Delta';
 import { Tip } from './Tip';
 import { PinButton } from './PinButton';
+import { AnimatedNumber } from './AnimatedNumber';
 import { Spark } from './Spark';
 import { Icon, metricStyle } from './Icon';
 import { BAND_COLOR, bandOf } from '@/lib/change';
@@ -24,15 +25,15 @@ export function Tile({ tile, spark, color: _color, compact: _compact = true }: {
   return (
     <div className={`tile clickable band-${band}`} style={{ ['--accent' as string]: edge }}>
       <div className="tile-top">
-        <span className="tile-label"><span className="tile-ico"><Icon name={icon} size={15} /></span><Link href={href} className="tile-link">{name}</Link>{tile.source && <SourceIcon source={tile.source} />}</span>
+        <span className="tile-label"><span className="tile-ico"><Icon name={icon} size={15} /></span><span className="tile-name"><Link href={href} className="tile-link">{name}</Link>{tile.source && <SourceIcon source={tile.source} />}</span></span>
         <span className="tile-tools"><PinButton cardKey={tile.key} label={name} /><Tip label={name}>{tile.help}</Tip></span>
       </div>
-      <div className="tile-value">{formatValue(tile.value, tile.unit)}</div>
+      <div className="tile-value"><AnimatedNumber value={tile.value} format={(v) => formatValue(v, tile.unit)} /></div>
       <div className="tile-bottom">
         {compare ? <Delta change={tile.change} trend={tile.trend} /> : <span />}
         {spark && <span className="spark"><Spark values={spark} color={band === 'flat' ? 'var(--ink-3)' : edge} /></span>}
       </div>
-      {compare && tile.previous !== null && <div className="prev">before: {formatValue(tile.previous, tile.unit)}</div>}
+      {compare && tile.previous !== null ? <div className="prev">before: {formatValue(tile.previous, tile.unit)}</div> : <div className="prev" aria-hidden="true" />}
     </div>
   );
 }

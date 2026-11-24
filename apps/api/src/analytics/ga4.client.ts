@@ -36,6 +36,8 @@ export interface Ga4ReportRequest {
   offset?: number;
   /** Only sessions from the Organic Search channel */
   organicOnly?: boolean;
+  /** Leave out rows where this dimension is "(not set)" */
+  nonEmptyDimension?: string;
 }
 
 /** The part of the Google client we use, so tests can replace it. */
@@ -140,6 +142,7 @@ export class Ga4Client {
         offset: req.offset ?? 0,
         keepEmptyRows: false,
         ...(req.organicOnly ? { dimensionFilter: { filter: { fieldName: 'sessionDefaultChannelGroup', stringFilter: { matchType: 'EXACT', value: 'Organic Search' } } } } : {}),
+        ...(req.nonEmptyDimension ? { dimensionFilter: { notExpression: { filter: { fieldName: req.nonEmptyDimension, stringFilter: { matchType: 'EXACT', value: '(not set)' } } } } } : {}),
       });
       return res as Ga4Response;
     } catch (err) {

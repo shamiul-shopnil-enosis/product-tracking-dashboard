@@ -135,3 +135,13 @@ export type DemographicsResponse = {
   chart: { series: { id: string; label: string }[]; points: Record<string, string | number | null>[] };
   notes: { source: string };
 };
+
+/** Every GA4 number as a card: the answer of /dashboard/ga4-cards. */
+export type Ga4CardsResponse = {
+  connected: boolean; range: Range;
+  /** one entry per day of the range, and of the period before */
+  dates: string[]; previousDates: string[];
+  tiles: Tile[];
+  series: Record<string, (number | null)[]>;
+  previousSeries: Record<string, (number | null)[]>;
+};

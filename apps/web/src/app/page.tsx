@@ -10,7 +10,8 @@ import { MarkersPanel } from '@/components/MarkersPanel';
 import { PageSkeleton } from '@/components/Skeleton';
 import { Tile } from '@/components/Tile';
 import { TrendChart } from '@/components/TrendChart';
-import { formatValue, type Overview, type SeoResponse } from '@/lib/dashboard';
+import { formatValue, type Ga4CardsResponse, type Overview, type SeoResponse } from '@/lib/dashboard';
+import { seoSpark } from '@/lib/cards';
 import { useLayout } from '@/lib/layout';
 import { useFilters } from '@/lib/filters';
 import { sparkFor } from '@/lib/series';
@@ -39,6 +40,9 @@ export default function OverviewPage() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
   const seo = useApiData<SeoResponse>(`/dashboard/seo?${f.rangeQs}`).data;
+  // Cards the person added from the Google Analytics page that the Overview report does not carry (a channel, an event, a page...)
+  const cardKeys = layout.cards.filter((k) => k !== 'live').join(',');
+  const extra = useApiData<Ga4CardsResponse>(cardKeys ? `/dashboard/ga4-cards?${f.rangeQs}&only=1&keys=${encodeURIComponent(cardKeys)}` : null).data;
   const { data, error, loading, reload } = useApiData<Overview>(`/dashboard/overview?${f.rangeQs}&traffic=${f.traffic}&threshold=${f.threshold}`);
   const status = useApiData<Status>('/dashboard/status').data;
   // The orange alert appears only when something got worse by a noticeable amount.
@@ -49,7 +53,9 @@ export default function OverviewPage() {
     const t = data?.tiles.find((x) => x.key === key);
     if (t) return <Tile key={key} tile={t} spark={sparkFor(key, data?.series ?? [], f.traffic)} />;
     const st = seo?.connected ? seo.tiles.find((x) => x.key === key) : undefined;
-    if (st) return <Tile key={key} tile={st} spark={key === 'orgSessions' ? seo!.series.map((p) => p.organicSessions) : undefined} />;
+    if (st) return <Tile key={key} tile={st} spark={seoSpark(key, seo)} />;
+    const ct = extra?.tiles.find((x) => x.key === key);
+    if (ct) return <Tile key={key} tile={ct} spark={extra?.series[key]} />;
     return null;
   });
 
@@ -65,7 +71,7 @@ export default function OverviewPage() {
           if (live?.available && live.activeUsers !== undefined) reportCards.push({ label: 'Active right now', source: 'ga4', value: formatValue(live.activeUsers, 'count'), change: null, trend: 'unknown', before: null });
           continue;
         }
-        const t = data.tiles.find((x) => x.key === key) ?? (seo?.connected ? seo.tiles.find((x) => x.key === key) : undefined);
+        const t = data.tiles.find((x) => x.key === key) ?? (seo?.connected ? seo.tiles.find((x) => x.key === key) : undefined) ?? extra?.tiles.find((x) => x.key === key);
         if (t) reportCards.push({ label: t.label.replace(/\s*\((GA4|Clarity)\)$/i, ''), source: t.source, value: formatValue(t.value, t.unit), change: t.change, trend: t.trend, before: t.previous !== null ? formatValue(t.previous, t.unit) : null });
       }
       await downloadOverviewPdf({

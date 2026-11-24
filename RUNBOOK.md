@@ -69,3 +69,16 @@ docker compose build && docker compose up -d
 Admins can set the site name, the Clarity token, the GA4 property and key file, and the PageSpeed key under **Data sources, Connections**, with no `.env` edit or restart. Keys saved there are stored encrypted in MongoDB (AES-256-GCM, key from `SETTINGS_SECRET`, or `JWT_SECRET` if that is empty) and can be replaced but never read back. A saved value wins over `.env`; "Remove saved ..." goes back to `.env`.
 - Do not change `SETTINGS_SECRET` or `JWT_SECRET` casually: saved keys become unreadable and are ignored (the log says so) until saved again.
 - One dashboard shows one site. To show another site (for example Enosis Solutions), change the name and replace the Clarity token, the GA4 property and its key file. History already stored stays in the database, so use a separate install or database for a second site. The logo image is part of the app and is not set from the screen.
+
+## Google Analytics cards
+The Google Analytics page lists every GA4 number the dashboard can work out (about 120 cards in sections: Visitors, Engagement, Traffic sources, Events, Pages, Audience, Search), with a search box. Each card has a + to add it to a person's Overview.
+- Besides the daily totals, channel, landing page, key event, organic and audience reports, the GA4 sync now also reads: every event by name (`events_all`), page views per page (`pages_views`), new vs returning users (`visitor_type`), scrolled users and 7/28-day active users (`reach`), source / medium (`source_medium`) and outbound link clicks (`links`, from the custom `link_url` dimension).
+- A report with no stored days is read for the last 90 days on the next start, so a new report fills in by itself within a few minutes. Cards for a channel, event, page or site appear for the busiest values in the chosen dates; a card a person added stays available even if it is not among the busiest.
+- Not available from this GA4 property: ecommerce and revenue (all zero), age and gender (no data), Search Console figures (not linked).
+
+## Clarity recording links
+The Friction and Pages tables have a Recordings column. "Open" opens the project's recordings in Clarity filtered to visits of exactly that page, in Clarity's own address format (built in `apps/web/src/lib/clarity.ts`):
+`https://clarity.microsoft.com/projects/view/<project ID>/impressions?date=Last 14 days&URL=2;4;<page address>`
+where `URL=2;4;` is Clarity's "Visited URL is exactly" filter. The date window runs back to the first day of the chosen range (at most 30 days, as Clarity keeps recordings for 30 days). Clarity's data feed gives no recording IDs, so this filtered list is the closest possible link.
+- The project ID is set under Data sources, Connections, "Clarity recordings" (paste the ID or any Clarity address that holds it). It is not a secret, so every signed-in person can use the links.
+- If Clarity changes its address format, change `recordingsUrl` in `apps/web/src/lib/clarity.ts`.

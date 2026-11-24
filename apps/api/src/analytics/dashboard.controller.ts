@@ -1,11 +1,12 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { addDays, daysBetween, Span } from './aggregate';
 import type { DemographicKey } from './ga4.constants';
-import { BreakdownQuery, DemographicsQuery, FrictionQuery, LandingQuery, PagesQuery, RangeQuery } from './dashboard.dto';
+import { BreakdownQuery, CardsQuery, DemographicsQuery, FrictionQuery, LandingQuery, PagesQuery, RangeQuery } from './dashboard.dto';
 import { DashboardService } from './dashboard.service';
 import { ClaritySyncService } from './clarity-sync.service';
 import { Ga4SyncService } from './ga4-sync.service';
 import { SpeedService } from './speed.service';
+import { SettingsService } from './settings.service';
 import { ExploreDimension, ExploreService } from './explore.service';
 
 // Any signed-in user may read the dashboard.
@@ -37,6 +38,7 @@ export class DashboardController {
     private readonly clarity: ClaritySyncService,
     private readonly ga4: Ga4SyncService,
     private readonly speed: SpeedService,
+    private readonly settings: SettingsService,
   ) {}
 
   /** Whether the data is fresh, for the sidebar. Safe for every signed-in user: no tokens, no counts of calls. */
@@ -52,6 +54,8 @@ export class DashboardController {
         lastRunStatus: s.lastRun?.status ?? null,
         daysOfData: s.daysOfData,
         lastDay: s.lastDay,
+        /** The project code is not secret: it lets every signed-in person open the project's recordings from a table row */
+        projectId: this.settings.clarityProjectId() || null,
       },
     };
   }
@@ -99,6 +103,12 @@ export class DashboardController {
   @Get('ga4-key-events')
   ga4KeyEvents(@Query() q: RangeQuery) {
     return this.explore.ga4KeyEvents(spanOf(q));
+  }
+
+  @Get('ga4-cards')
+  ga4Cards(@Query() q: CardsQuery) {
+    const keys = [...new Set((q.keys ?? '').split(',').map((k) => k.trim()).filter(Boolean))].slice(0, 60);
+    return this.explore.ga4Cards(spanOf(q), keys, q.only === '1');
   }
 
   @Get('ga4-channels')

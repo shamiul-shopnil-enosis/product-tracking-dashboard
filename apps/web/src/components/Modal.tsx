@@ -3,12 +3,14 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
+import { usePresence } from '@/lib/motion';
 
 const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
 /** A dialog over the page. Escape or a click outside closes it; Tab stays inside; focus goes back to where it was. */
 export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
+  const { mounted, closing } = usePresence(open, 170);
 
   useEffect(() => {
     if (!open) return;
@@ -35,9 +37,9 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  if (!open || typeof document === 'undefined') return null;
+  if (!mounted || typeof document === 'undefined') return null;
   return createPortal(
-    <div className="modal-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="modal-back" data-state={closing ? 'closing' : 'open'} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={`modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={box}>
         <div className="modal-head">
           <h2>{title}</h2>

@@ -12,6 +12,7 @@ export const MANAGED_KEYS = {
   SITE_NAME: { secret: false },
   SITE_URL: { secret: false },
   CLARITY_API_TOKEN: { secret: true },
+  CLARITY_PROJECT_ID: { secret: false },
   GA4_PROPERTY_ID: { secret: false },
   GA4_KEY_JSON: { secret: true },
   GA4_CLIENT_EMAIL: { secret: false },

@@ -18,7 +18,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    // The first check shows a loading screen. Later checks (one per page change) run quietly, so the window does not blank on every click.
+    if (!wasSignedIn.current) setLoading(true);
     api<User>('/auth/me')
       .then((u) => {
         if (cancelled) return;

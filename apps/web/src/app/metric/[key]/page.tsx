@@ -10,7 +10,7 @@ import { PageSkeleton } from '@/components/Skeleton';
 import { TrendChart } from '@/components/TrendChart';
 import { filterQuery, useFilters } from '@/lib/filters';
 import { COMPARE_MODES } from '@/lib/range';
-import { formatValue, type Overview, type Point, type SeoResponse, type Tile, type Unit } from '@/lib/dashboard';
+import { formatValue, type Ga4CardsResponse, type Overview, type Point, type SeoResponse, type Tile, type Unit } from '@/lib/dashboard';
 import { useApiData } from '@/lib/useApi';
 
 type Day = Record<string, string | number | null>;
@@ -48,30 +48,40 @@ export default function MetricPage() {
   const sp = useSearchParams();
   const back = `/${filterQuery(new URLSearchParams(sp.toString()))}`;
   const def = DEFS[key];
+  // The newer GA4 cards (a channel, an event, a page...) have no entry above: they come from the cards endpoint.
+  const isCard = !def;
   const overview = useApiData<Overview>(def && !def.seo ? `/dashboard/overview?${f.rangeQs}&traffic=${f.traffic}&threshold=${f.threshold}` : null);
   const seo = useApiData<SeoResponse>(def?.seo ? `/dashboard/seo?${f.rangeQs}` : null);
-  const loaded = def?.seo ? seo : overview;
+  const cards = useApiData<Ga4CardsResponse>(isCard ? `/dashboard/ga4-cards?${f.rangeQs}&keys=${encodeURIComponent(key)}&only=1` : null);
+  const loaded = isCard ? cards : def?.seo ? seo : overview;
   const data = loaded.data;
 
-  const tile: Tile | undefined = def?.seo ? seo.data?.tiles.find((t) => t.key === key) : overview.data?.tiles.find((t) => t.key === key);
-  const points: Day[] = !data || !def ? [] : def.seo
-    ? (seo.data?.series ?? []).map((p) => ({ date: p.date, v: p[def.seoKey] as number | null }))
-    : (overview.data?.series ?? []).map((p) => ({ date: p.date, v: def.pick(p, f.traffic === 'all') }));
+  const tile: Tile | undefined = isCard ? cards.data?.tiles.find((t) => t.key === key) : def?.seo ? seo.data?.tiles.find((t) => t.key === key) : overview.data?.tiles.find((t) => t.key === key);
+  const unit: Unit = tile?.unit ?? def?.unit ?? 'count';
+  const color = def?.color ?? 'var(--s3)';
+  const points: Day[] = isCard
+    ? (cards.data?.dates ?? []).map((date, i) => ({ date, v: cards.data?.series[key]?.[i] ?? null }))
+    : !data || !def ? [] : def.seo
+      ? (seo.data?.series ?? []).map((p) => ({ date: p.date, v: p[def.seoKey] as number | null }))
+      : (overview.data?.series ?? []).map((p) => ({ date: p.date, v: def.pick(p, f.traffic === 'all') }));
   const values = points.map((p) => p.v as number | null).filter((v): v is number => v !== null);
   const high = values.length ? Math.max(...values) : null;
   const low = values.length ? Math.min(...values) : null;
   const avg = values.length ? values.reduce((s, v) => s + v, 0) / values.length : null;
   const dateOf = (v: number | null) => points.find((p) => p.v === v)?.date as string | undefined;
-  const coverage = def?.seo ? seo.data?.coverage : overview.data?.coverage;
-  const prev = key === 'sessions' && f.compare && f.traffic === 'human' && overview.data ? { label: COMPARE_MODES.find((m) => m.id === f.range.compareMode)?.label ?? 'Previous period', values: overview.data.previousSessions } : undefined;
+  const coverage = isCard ? undefined : def?.seo ? seo.data?.coverage : overview.data?.coverage;
+  const compareLabel = COMPARE_MODES.find((m) => m.id === f.range.compareMode)?.label ?? 'Previous period';
+  const prev = isCard && f.compare && cards.data?.previousSeries[key]
+    ? { label: compareLabel, values: cards.data.previousSeries[key] }
+    : key === 'sessions' && f.compare && f.traffic === 'human' && overview.data ? { label: compareLabel, values: overview.data.previousSessions } : undefined;
 
   return (
     <AnalyticsPage>
       <p style={{ margin: '0 0 8px' }}><Link href={back}>← Overview</Link></p>
-      {!def && <div className="empty"><b>Unknown metric</b>This metric has no detail page. <Link href={back}>Back to the Overview</Link>.</div>}
-      {def && loaded.error && !data && <ErrorState message={loaded.error} onRetry={loaded.reload} />}
-      {def && !data && !loaded.error && <PageSkeleton />}
-      {def && data && tile && (
+      {isCard && data && !tile && <div className="empty"><b>No data for this card in this range</b>Nothing is stored for it yet, or it did not happen in these dates. <Link href={back}>Back to the Overview</Link>.</div>}
+      {loaded.error && !data && <ErrorState message={loaded.error} onRetry={loaded.reload} />}
+      {!data && !loaded.error && <PageSkeleton />}
+      {data && tile && (
         <div style={{ opacity: loaded.loading ? 0.6 : 1, transition: 'opacity .15s' }}>
           <div className="page-head"><h1>{tile.label}</h1><p>{tile.help}</p></div>
           <div className="metric-hero">
@@ -81,15 +91,15 @@ export default function MetricPage() {
           </div>
           {coverage && <CoverageNotice current={coverage.current} previous={coverage.previous} />}
           <TrendChart
-            title={/per day/i.test(tile.label) ? tile.label : `${tile.label}, per day`} unit={def.unit} height={340} points={points as never}
+            title={/per day/i.test(tile.label) ? tile.label : `${tile.label}, per day`} unit={unit} height={340} points={points as never}
             markers={overview.data?.annotations ?? seo.data?.annotations ?? []} prev={prev}
-            series={[{ key: 'v', label: tile.label, color: def.color }]}
+            series={[{ key: 'v', label: tile.label, color }]}
           />
           <div className="tiles" style={{ marginTop: 16 }}>
             {[['Highest day', high], ['Lowest day', low], ['Daily average', avg]].map(([label, v]) => (
               <div className="tile" key={label as string}>
                 <div className="tile-top"><span>{label}</span></div>
-                <div className="tile-value">{formatValue(v as number | null, def.unit)}</div>
+                <div className="tile-value">{formatValue(v as number | null, unit)}</div>
                 {label !== 'Daily average' && <div className="prev">{dateOf(v as number | null) ?? ''}</div>}
               </div>
             ))}

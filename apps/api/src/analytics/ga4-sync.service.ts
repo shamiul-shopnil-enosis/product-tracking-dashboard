@@ -86,7 +86,7 @@ export class Ga4SyncService implements OnApplicationBootstrap {
       const def = GA4_REPORTS[key];
       try {
         run.callsUsed += 1;
-        let rows = rowsFromReport(await this.client.reportAll({ ...range, dimensions: def.dimensions, metrics: def.metrics, organicOnly: def.organic }));
+        let rows = rowsFromReport(await this.client.reportAll({ ...range, dimensions: def.dimensions, metrics: def.metrics, organicOnly: def.organic, nonEmptyDimension: def.nonEmpty }));
         if (key === 'none') {
           try {
             run.callsUsed += 1;

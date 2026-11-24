@@ -8,6 +8,7 @@ import { Ga4Client } from './ga4.client';
 import { aggregateGa4, dailySeries, dimensionRows, eventRows, ga4Day, landingRows } from './ga4';
 import { GA4_DEMOGRAPHICS, type DemographicKey } from './ga4.constants';
 import { buildSeoTiles } from './seo';
+import { breakdownsFor, buildCards, catalog, specForKey, type CardSpec, type DayIndex } from './ga4-cards';
 import { BREAKDOWNS } from './clarity.constants';
 import { AnnotationsService } from './annotations.service';
 import { FindingLinksService } from './finding-links.service';
@@ -212,6 +213,35 @@ export class ExploreService {
       notes: {
         source: 'Google Analytics (GA4). GA4 only removes bots it recognises, so rows with a very low engagement rate are likely automated visits, not people.',
       },
+    };
+  }
+
+  /**
+   * Every GA4 number as a card, with its change and trend line. With `only`, just the requested keys (what an Overview needs);
+   * otherwise the whole catalogue, plus any requested key that is not among the busiest values right now.
+   */
+  async ga4Cards(span: Span, keys: string[], only: boolean) {
+    const r = periodsFor(span);
+    const dates = daysBetween(r.from, r.to);
+    const prevDates = daysBetween(r.previousFrom, r.previousTo);
+    const names = breakdownsFor(only ? keys : null);
+    const cur: DayIndex = new Map(); const prev: DayIndex = new Map();
+    const inCur = new Set(dates);
+    const docsPerBreakdown = await Promise.all(names.map((b) => this.load(r.previousFrom, r.to, b, 'ga4')));
+    names.forEach((b, i) => {
+      const c = new Map<string, Array<Record<string, string | number>>>(); const p = new Map<string, Array<Record<string, string | number>>>();
+      for (const d of docsPerBreakdown[i]) (inCur.has(d.date) ? c : p).set(d.date, d.payload as Array<Record<string, string | number>>);
+      cur.set(b, c); prev.set(b, p);
+    });
+    const merged: DayIndex = new Map(names.map((b) => [b, new Map([...(prev.get(b) ?? []), ...(cur.get(b) ?? [])])]));
+    const specs: CardSpec[] = [];
+    const add = (s: CardSpec | null) => { if (s && !specs.some((x) => x.key === s.key)) specs.push(s); };
+    if (only) keys.forEach((k) => add(specForKey(k, merged)));
+    else { catalog(cur).forEach(add); keys.forEach((k) => add(specForKey(k, merged))); }
+    const built = buildCards(specs, cur, prev, dates, prevDates);
+    return {
+      connected: (cur.get('none')?.size ?? 0) > 0 || built.tiles.length > 0,
+      range: r, dates, previousDates: prevDates, ...built,
     };
   }
 

@@ -137,20 +137,23 @@ function payloadFor(breakdown: string, dayRows: Array<Record<string, string | nu
   if (breakdown === 'landing' || breakdown === 'org_landing') return landingWithRemainder(dayRows, landingPerDay);
   if (breakdown === 'event') return dayRows.filter((r) => num(r.keyEvents) > 0);
   const rem = GA4_REPORTS[breakdown]?.remainder;
-  return rem ? withRemainder(dayRows, rem.key, rem.keep) : dayRows;
+  return rem ? withRemainder(dayRows, rem.key, rem.keep, rem.by, rem.sum) : dayRows;
 }
 
 /**
  * The busiest values of a day plus one "(other)" row. Only sessions and engaged sessions are summed into it:
  * users would double count, and those are the only numbers the tables show.
  */
-export function withRemainder(rows: Array<Record<string, string | number>>, nameKey: string, keep: number) {
-  const top = topRows(rows, 'sessions', keep);
+export function withRemainder(
+  rows: Array<Record<string, string | number>>, nameKey: string, keep: number,
+  by = 'sessions', sum: readonly string[] = ['sessions', 'engagedSessions'],
+) {
+  const top = topRows(rows, by, keep);
   const rest = rows.filter((r) => !top.includes(r));
   if (rest.length === 0) return top;
   return [
     ...top,
-    { [nameKey]: OTHER_VALUES, sessions: rest.reduce((s, r) => s + num(r.sessions), 0), engagedSessions: rest.reduce((s, r) => s + num(r.engagedSessions), 0) },
+    { [nameKey]: OTHER_VALUES, ...Object.fromEntries(sum.map((m) => [m, rest.reduce((s, r) => s + num(r[m]), 0)])) },
   ];
 }
 

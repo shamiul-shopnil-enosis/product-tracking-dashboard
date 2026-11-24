@@ -9,6 +9,7 @@ import { Guide, Hint } from '@/components/Hint';
 import { G } from '@/lib/glossary';
 import { PageSkeleton } from '@/components/Skeleton';
 import { Tile } from '@/components/Tile';
+import { RecordingLink } from '@/components/RecordingLink';
 import { TrendChart } from '@/components/TrendChart';
 import { formatValue, type Friction, type PageRow } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
@@ -33,7 +34,7 @@ export default function FrictionPage() {
     <AnalyticsPage>
       <PageHead title="Friction" more="Friction means visitors had trouble. The four signals are quick backs, dead clicks, rage clicks and script errors (explained under the table). Lower is better. Use the table to find which pages to fix first, then log the problem as a finding.">Where visitors hit trouble: quick backs, dead clicks, rage clicks and script errors. Human sessions only.</PageHead>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
-      {!data && !error && <PageSkeleton />}
+      {!data && !error && <PageSkeleton variant="table" />}
       {data && (
         <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity .15s' }}>
           <CoverageNotice current={data.coverage.current} previous={data.coverage.previous} />
@@ -58,13 +59,14 @@ export default function FrictionPage() {
           {data.pages.length > 0 && (
             <div className="table-scroll">
               <table>
-                <thead><tr><th>Page</th><th className="num">Sessions</th><th className="num">Quick backs</th><th className="num">Dead clicks</th><th className="num">Rage clicks</th><th className="num">Script errors</th><th className="num">Scroll</th><th>Findings</th></tr></thead>
+                <thead><tr><th>Page</th><th className="num">Sessions</th><th className="num">Quick backs</th><th className="num">Dead clicks</th><th className="num">Rage clicks</th><th className="num">Script errors</th><th className="num">Scroll</th><th>Recordings</th><th>Findings</th></tr></thead>
                 <tbody>
                   {data.pages.map((p) => (
                     <tr key={p.url}>
                       <td style={{ wordBreak: 'break-all', minWidth: 180 }}><a href={p.url} target="_blank" rel="noreferrer">{path(p.url)}</a></td>
                       <td className="num">{p.sessions}</td><td className="num">{cell(p.quickback)}</td><td className="num">{cell(p.dead)}</td><td className="num">{cell(p.rage)}</td><td className="num">{cell(p.scriptError)}</td>
                       <td className="num">{formatValue(p.scrollDepth, 'percent')}</td>
+                      <td><RecordingLink pageUrl={p.url} /></td>
                       <td><FindingLinks url={p.url} open={p.openFindings} /></td>
                     </tr>
                   ))}
@@ -72,7 +74,7 @@ export default function FrictionPage() {
               </table>
             </div>
           )}
-          {data.pages.length > 0 && <Guide items={[G.sessions, G.quickBacks, G.deadClicks, G.rageClicks, G.scriptErrors, G.friction, G.scroll, G.findings]} />}
+          {data.pages.length > 0 && <Guide items={[G.sessions, G.quickBacks, G.deadClicks, G.rageClicks, G.scriptErrors, G.friction, G.scroll, G.recordings, G.findings]} />}
           {data.coverage.pageDays > 0 && data.pages.length === 0 && <div className="empty"><b>No pages reach {minSessions} sessions</b>Lower the minimum or choose a longer range.</div>}
           {data.coverage.pageDays > 0 && (
             <p className="muted">

@@ -45,7 +45,7 @@ function Ga4Traffic() {
   return (
     <>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
-      {!data && !error && <PageSkeleton />}
+      {!data && !error && <PageSkeleton variant="table" />}
       {data && !data.connected && (
         <div className="notice">GA4 is not connected yet, or has no stored days. An admin can connect it under <Link href="/admin/data">Data sources</Link>.</div>
       )}
@@ -97,7 +97,7 @@ function ClarityTraffic() {
         ))}
       </div>
       {error && !data && <ErrorState message={error} onRetry={reload} />}
-      {!data && !error && <PageSkeleton />}
+      {!data && !error && <PageSkeleton variant="table" />}
       {data && (
         <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity .15s' }}>
           <CoverageNotice current={data.coverage.current} previous={data.coverage.previous} />

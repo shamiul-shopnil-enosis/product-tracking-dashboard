@@ -49,7 +49,7 @@ describe('Ga4SyncService.run', () => {
     expect(runDoc.status).toBe('success');
     expect(stored.filter((s) => s.filter.breakdown === 'event')).toHaveLength(1);
     expect(stored.find((s) => s.filter.breakdown === 'event')!.payload).toEqual([{ eventName: 'sign_up', keyEvents: 3 }]); // zero rows dropped
-    expect(runDoc.callsUsed).toBe(18); // totals + key events, channel, landing, events by name, 3 organic, 10 audience
+    expect(runDoc.callsUsed).toBe(24); // totals + key events, channel, landing, events by name, 3 organic, 10 audience, 6 more (all events, pages, new vs returning, reach, source, links)
   });
 
   it('asks GA4 for the right range and property', async () => {

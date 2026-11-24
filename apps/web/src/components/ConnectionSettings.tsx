@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Hint } from './Hint';
 import { Icon } from './Icon';
 import { api, ApiError } from '@/lib/api';
+import { refreshClarityProject } from '@/lib/clarity';
 
 type Source = 'screen' | 'server' | 'none';
 type View = {
   site: { name: string; url: string };
-  clarity: { configured: boolean; source: Source };
+  clarity: { configured: boolean; source: Source; projectId: string };
   ga4: { savedHere: boolean; propertyId: string; clientEmail: string | null; keySource: 'screen' | 'file' | 'none'; configured: boolean; problem: string | null };
   pagespeed: { configured: boolean; source: Source };
 };
@@ -23,6 +24,7 @@ export function ConnectionSettings() {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [token, setToken] = useState('');
+  const [project, setProject] = useState('');
   const [property, setProperty] = useState('');
   const [keyFile, setKeyFile] = useState<{ name: string; text: string } | null>(null);
   const [psi, setPsi] = useState('');
@@ -30,7 +32,7 @@ export function ConnectionSettings() {
   const load = useCallback(async () => {
     try {
       const v = await api<View>('/settings');
-      setView(v); setName(v.site.name); setUrl(v.site.url); setProperty(v.ga4.propertyId);
+      setView(v); setName(v.site.name); setUrl(v.site.url); setProperty(v.ga4.propertyId); setProject(v.clarity.projectId);
     } catch (e) {
       setNote({ ok: false, text: e instanceof Error ? e.message : 'Could not load the settings' });
     }
@@ -82,6 +84,16 @@ export function ConnectionSettings() {
           <label className="field"><span>{view.clarity.configured ? 'Replace the token' : 'API token'}</span><input type="password" required autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} /></label>
           <button className="primary" disabled={busy || !token}>Save token</button>
           {view.clarity.source === 'screen' && <button type="button" disabled={busy} onClick={() => void run(() => del('/settings/clarity'), 'Saved token removed.')}>Remove saved token</button>}
+        </div>
+      </form>
+
+      <form className="card" onSubmit={(e: FormEvent) => { e.preventDefault(); void run(() => put('/settings/clarity-project', { value: project }), 'Clarity project saved. The tables now link to its recordings.', refreshClarityProject); }}>
+        <strong>Clarity recordings</strong>
+        <p className="muted">Project ID: <b>{view.clarity.projectId ? view.clarity.projectId : 'not set'}</b>. Lets the Friction and Pages tables open your project’s recordings. It is the code in your Clarity address, for example the <code>rn41bqeja2</code> in <code>clarity.microsoft.com/player/rn41bqeja2/…</code>. You can paste the whole address.</p>
+        <div className="form-grid">
+          <label className="field"><span>Project ID or Clarity address</span><input type="text" maxLength={500} value={project} onChange={(e) => setProject(e.target.value)} autoComplete="off" /></label>
+          <button className="primary" disabled={busy || !project.trim() || project.trim() === view.clarity.projectId}>Save project</button>
+          {view.clarity.projectId && <button type="button" disabled={busy} onClick={() => void run(() => del('/settings/clarity-project'), 'Clarity project removed.', refreshClarityProject)}>Remove</button>}
         </div>
       </form>
 

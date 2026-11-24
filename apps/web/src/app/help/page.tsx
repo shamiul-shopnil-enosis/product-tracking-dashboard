@@ -27,6 +27,8 @@ const METRICS: Array<[string, string]> = [
   ['Per day vs before', 'Sessions per day in the chosen range compared with sessions per day in the equal range just before it.'],
 ];
 
+import { ShortcutList } from '@/components/Shortcuts';
+
 export default function HelpPage() {
   return (
     <div className="prose">
@@ -49,6 +51,10 @@ export default function HelpPage() {
       <p><strong>Microsoft Clarity</strong> shows how people behave on the site: scrolling, clicks and friction, human visitors only. The app asks Clarity for the previous day at 00:05 UTC (06:05 in Bangladesh) and stores it, because Clarity only keeps the last 1 to 3 days. Its charts therefore start from the first stored day.</p>
       <p><strong>Google Analytics (GA4)</strong> shows where visits come from and where they start: sessions, active users, engagement rate, key events and landing pages. GA4 can return history, so its first sync reads the last 90 days, and each night the last 3 days are read again because GA4 revises recent days. Every GA4 number is labelled “GA4”.</p>
       <p>The two sources count differently. GA4 only removes bots it recognises, so its sessions are higher than Clarity’s human sessions. Do not add them together or expect them to match; use each for what it is good at.</p>
+
+      <h2>Keyboard shortcuts</h2>
+      <p>Press <kbd>?</kbd> anywhere for this list. Shortcuts work when you are not typing in a field.</p>
+      <ShortcutList />
 
       <h2>Things to be careful about</h2>
       <ul>

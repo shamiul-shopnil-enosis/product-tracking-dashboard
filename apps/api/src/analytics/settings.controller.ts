@@ -9,6 +9,7 @@ export class SiteDto {
   @IsOptional() @IsString() @MaxLength(300) url?: string;
 }
 export class ClarityDto { @IsString() @MaxLength(5000) token: string; }
+export class ClarityProjectDto { @IsString() @MaxLength(500) value: string; }
 export class Ga4Dto {
   @IsOptional() @IsString() @MaxLength(20) propertyId?: string;
   @IsOptional() @IsString() @MaxLength(20000) keyJson?: string;
@@ -25,6 +26,8 @@ export class SettingsController {
   @Put('site') site(@Body() dto: SiteDto, @CurrentUser() me: AuthUser) { return this.settings.setSite(dto, me.email); }
   @Put('clarity') clarity(@Body() dto: ClarityDto, @CurrentUser() me: AuthUser) { return this.settings.setClarity(dto.token, me.email); }
   @Delete('clarity') clearClarity(@CurrentUser() me: AuthUser) { return this.settings.clearClarity(me.email); }
+  @Put('clarity-project') clarityProject(@Body() dto: ClarityProjectDto, @CurrentUser() me: AuthUser) { return this.settings.setClarityProject(dto.value, me.email); }
+  @Delete('clarity-project') clearClarityProject(@CurrentUser() me: AuthUser) { return this.settings.clearClarityProject(me.email); }
   @Put('ga4') ga4(@Body() dto: Ga4Dto, @CurrentUser() me: AuthUser) { return this.settings.setGa4(dto, me.email); }
   @Delete('ga4') clearGa4(@CurrentUser() me: AuthUser) { return this.settings.clearGa4(me.email); }
   @Put('pagespeed') pagespeed(@Body() dto: PagespeedDto, @CurrentUser() me: AuthUser) { return this.settings.setPagespeed(dto.apiKey, me.email); }

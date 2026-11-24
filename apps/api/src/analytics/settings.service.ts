@@ -6,13 +6,14 @@ export const DEFAULT_SITE_NAME = 'Enosis Outsourcing';
 
 export interface SettingsView {
   site: { name: string; url: string };
-  clarity: { configured: boolean; source: ValueSource };
+  clarity: { configured: boolean; source: ValueSource; projectId: string };
   ga4: { savedHere: boolean; propertyId: string; clientEmail: string | null; keySource: 'screen' | 'file' | 'none'; configured: boolean; problem: string | null };
   pagespeed: { configured: boolean; source: ValueSource };
 }
 
 const TOKEN_RE = /^\S{10,5000}$/;
 const PROPERTY_RE = /^\d{4,15}$/;
+const CLARITY_PROJECT_RE = /^[a-z0-9]{6,20}$/i;
 const PSI_KEY_RE = /^[A-Za-z0-9_-]{20,80}$/;
 
 /** Validates what an admin types, saves it, and tells the connections to pick it up. Secret values are never returned. */
@@ -26,11 +27,16 @@ export class SettingsService {
     return (this.cfg.get<string>('SITE_NAME') ?? '').trim() || DEFAULT_SITE_NAME;
   }
 
+  /** The Clarity project's code (not a secret), used to link table rows to the project's recordings. */
+  clarityProjectId(): string {
+    return (this.cfg.get<string>('CLARITY_PROJECT_ID') ?? '').trim();
+  }
+
   view(): SettingsView {
     const keySource = this.cfg.source('GA4_KEY_JSON') === 'screen' ? 'screen' : this.ga4.problem?.includes('service-account key') ? 'none' : 'file';
     return {
       site: { name: this.siteName(), url: (this.cfg.get<string>('SITE_URL') ?? '').trim() },
-      clarity: { configured: this.cfg.source('CLARITY_API_TOKEN') !== 'none', source: this.cfg.source('CLARITY_API_TOKEN') },
+      clarity: { configured: this.cfg.source('CLARITY_API_TOKEN') !== 'none', source: this.cfg.source('CLARITY_API_TOKEN'), projectId: this.clarityProjectId() },
       ga4: { savedHere: this.cfg.source('GA4_KEY_JSON') === 'screen' || this.cfg.source('GA4_PROPERTY_ID') === 'screen', propertyId: this.ga4.propertyId, clientEmail: (this.cfg.get<string>('GA4_CLIENT_EMAIL') ?? '').trim() || null, keySource, configured: this.ga4.configured, problem: this.ga4.problem },
       pagespeed: { configured: this.cfg.source('PAGESPEED_API_KEY') !== 'none', source: this.cfg.source('PAGESPEED_API_KEY') },
     };
@@ -70,6 +76,23 @@ export class SettingsService {
   async clearClarity(who: string): Promise<SettingsView> {
     await this.cfg.clear('CLARITY_API_TOKEN');
     this.log(who, 'the Clarity token (removed)');
+    return this.view();
+  }
+
+  /** Accepts the code itself, or any Clarity address that contains it (a dashboard, recordings or player link). */
+  async setClarityProject(value: string, who: string): Promise<SettingsView> {
+    const v = (value ?? '').trim();
+    const fromUrl = /clarity\.microsoft\.com\/(?:projects\/view|player)\/([a-z0-9]{6,20})/i.exec(v)?.[1];
+    const id = fromUrl ?? (CLARITY_PROJECT_RE.test(v) ? v : '');
+    if (!id) throw new BadRequestException('Paste the Clarity project ID (letters and numbers, for example rn41bqeja2) or any address from your Clarity project');
+    await this.cfg.set('CLARITY_PROJECT_ID', id.toLowerCase());
+    this.log(who, 'the Clarity project ID');
+    return this.view();
+  }
+
+  async clearClarityProject(who: string): Promise<SettingsView> {
+    await this.cfg.clear('CLARITY_PROJECT_ID');
+    this.log(who, 'the Clarity project ID (removed)');
     return this.view();
   }
 

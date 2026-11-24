@@ -115,11 +115,12 @@ export function LiveTile() {
   return (
     <div className="tile live" aria-label="Active users right now">
       <div className="tile-top">
-        <span className="tile-label no-ico"><span>Active right now</span><SourceIcon source="ga4" /></span>
+        <span className="tile-label"><span className="tile-ico"><Icon name="live" size={15} /></span><span className="tile-name">Active right now<SourceIcon source="ga4" /></span></span>
         <span className="tile-tools"><PinButton cardKey="live" label="Active right now" /><Tip label="Active right now">People using the site in the last {data.windowMinutes} minutes, according to Google Analytics. Updates every minute. It includes automated visitors GA4 does not recognise.</Tip></span>
       </div>
       <div className="tile-value"><i className="dot pulse" aria-hidden /> {formatValue(data.activeUsers, 'count')}</div>
-      <div className="prev">last {data.windowMinutes} minutes · GA4</div>
+      <div className="tile-bottom" aria-hidden="true" />
+      <div className="prev">last {data.windowMinutes} minutes</div>
     </div>
   );
 }

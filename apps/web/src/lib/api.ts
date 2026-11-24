@@ -18,7 +18,27 @@ export type LinkResult = { user: AdminUser; token: string; purpose: 'invite' | '
 export type LoginContext = { dataUpdatedAt: string | null; accessContact: string | null };
 export type Health = { status: 'ok' | 'degraded'; db: 'up' | 'down' };
 
+// Requests in flight, so a progress bar can show while data loads. Background polling is left out: it would flash the bar.
+const QUIET = ['/speed/jobs/', '/dashboard/ga4-realtime', '/dashboard/status', '/findings/summary', '/auth/me', '/health/context'];
+let inflight = 0;
+const watchers = new Set<(count: number) => void>();
+export function onActivity(cb: (count: number) => void): () => void {
+  watchers.add(cb);
+  return () => { watchers.delete(cb); };
+}
+const track = (delta: number) => { inflight = Math.max(0, inflight + delta); watchers.forEach((w) => w(inflight)); };
+
 export async function api<T = void>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+  const tracked = (init.method ?? 'GET') === 'GET' && !QUIET.some((q) => path.startsWith(q));
+  if (tracked) track(1);
+  try {
+    return await request<T>(path, init);
+  } finally {
+    if (tracked) track(-1);
+  }
+}
+
+async function request<T>(path: string, init: { method?: string; body?: unknown }): Promise<T> {
   const res = await fetch(`/api${path}`, {
     method: init.method ?? 'GET',
     headers: init.body !== undefined ? { 'Content-Type': 'application/json' } : undefined,

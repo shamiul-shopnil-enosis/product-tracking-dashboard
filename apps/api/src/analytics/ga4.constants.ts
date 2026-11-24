@@ -4,7 +4,9 @@ export interface Ga4ReportDef {
   /** Only sessions whose default channel group is Organic Search */
   organic?: boolean;
   /** Keep the busiest values of each day and fold the rest into one row, so shares stay measured against the real total */
-  remainder?: { key: string; keep: number };
+  remainder?: { key: string; keep: number; /** metric to rank by (default sessions) */ by?: string; /** metrics added up into the folded row (default sessions and engagedSessions) */ sum?: readonly string[] };
+  /** Leave out rows where this dimension is not set (for example events that carry no link) */
+  nonEmpty?: string;
 }
 
 /** The demographic cuts: our name for it and GA4's dimension. */
@@ -48,6 +50,42 @@ export const GA4_REPORTS: Record<string, Ga4ReportDef> = {
   event: {
     dimensions: ['date', 'eventName'],
     metrics: ['keyEvents'],
+  },
+  // ---- everything else GA4 can tell us, for the cards on the Google Analytics page ----
+  /** Every event by name (not only key events): page_view, scroll, click, claim_link_visit... */
+  events_all: {
+    dimensions: ['date', 'eventName'],
+    metrics: ['eventCount'],
+    remainder: { key: 'eventName', keep: 40, by: 'eventCount', sum: ['eventCount'] },
+  },
+  /** Page views per page. A site with many addresses is cut to the busiest per day plus one "(other)" row. */
+  pages_views: {
+    dimensions: ['date', 'pagePath'],
+    metrics: ['screenPageViews', 'userEngagementDuration'],
+    remainder: { key: 'pagePath', keep: 50, by: 'screenPageViews', sum: ['screenPageViews', 'userEngagementDuration'] },
+  },
+  /** New and returning visitors */
+  visitor_type: {
+    dimensions: ['date', 'newVsReturning'],
+    metrics: ['activeUsers', 'sessions', 'engagedSessions'],
+  },
+  /** Reach numbers that need their own report: people who scrolled, and users active over the last 7 and 28 days */
+  reach: {
+    dimensions: ['date'],
+    metrics: ['scrolledUsers', 'active7DayUsers', 'active28DayUsers'],
+  },
+  /** Where visits come from in detail, for example google / organic or chatgpt.com / ai-assistant */
+  source_medium: {
+    dimensions: ['date', 'sessionSourceMedium'],
+    metrics: SESSION_METRICS,
+    remainder: { key: 'sessionSourceMedium', keep: 30 },
+  },
+  /** Clicks on links that leave the site (the custom link_url dimension) */
+  links: {
+    dimensions: ['date', 'customEvent:link_url'],
+    metrics: ['eventCount'],
+    nonEmpty: 'customEvent:link_url',
+    remainder: { key: 'customEvent:link_url', keep: 40, by: 'eventCount', sum: ['eventCount'] },
   },
   // ---- SEO: organic search visits only ----
   organic: {

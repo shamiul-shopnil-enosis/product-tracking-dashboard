@@ -28,6 +28,11 @@ describe('LayoutService', () => {
     expect(model.updateOne).toHaveBeenCalledWith({ userId: 'u1' }, { $set: { cards: ['live', 'rage'] } }, { upsert: true });
   });
 
+  it('accepts the keys of cards made from lists, such as a channel or a page', async () => {
+    const { service } = make();
+    expect((await service.set('u1', ['ch_direct', 'evt_claim_link_visit', 'lk_acme-com', 'ga4Bounce'])).cards).toHaveLength(4);
+  });
+
   it('can save an empty dashboard', async () => {
     const { service } = make();
     expect((await service.set('u1', [])).cards).toEqual([]);
