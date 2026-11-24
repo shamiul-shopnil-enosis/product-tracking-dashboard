@@ -103,19 +103,11 @@ export default function OverviewPage() {
       {data && (
         <div className="two-col" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity .15s' }}>
           <div>
-            <section className="card headcard flush" aria-label="Summary">
-              <div className="block-head" style={{ marginBottom: 0 }}><span className="eyebrow" style={{ margin: 0 }}>Summary <Tip label="Summary">What changed most in the chosen range compared with the equal range just before it, in one sentence.</Tip></span></div>
-              <div className="chips">
-                <span className="chip">{fmtDate(data.range.from)} to {fmtDate(data.range.to)}</span>
-                <span className="chip"><SourceIcon source="clarity" size={14} />Clarity</span>
-                {data.ga4.connected && <span className="chip" title={data.ga4.approximateDays.length ? `Recent days can still change: ${data.ga4.approximateDays.join(', ')}` : undefined}><SourceIcon source="ga4" size={14} />GA4 · {data.ga4.daysWithData} days</span>}
-              </div>
-              {!f.compare ? <p className="headline muted">Comparison is off. Turn on Compare in the date picker to see what changed.</p>
-                : !data.headline ? <p className="headline muted">The summary appears once there are full days to compare.</p>
-                : showAlert && !alertHidden ? null
-                : <p className="headline">{data.headline}</p>}
-              {f.compare && data.insight && <p className="insight"><b>What it means:</b> {data.insight}</p>}
-            </section>
+            <div className="chips overview-chips" aria-label="What this view covers">
+              <span className="chip">{fmtDate(data.range.from)} to {fmtDate(data.range.to)}</span>
+              <span className="chip"><SourceIcon source="clarity" size={14} />Clarity</span>
+              {data.ga4.connected && <span className="chip" title={data.ga4.approximateDays.length ? `Recent days can still change: ${data.ga4.approximateDays.join(', ')}` : undefined}><SourceIcon source="ga4" size={14} />GA4 · {data.ga4.daysWithData} days</span>}
+            </div>
             {showAlert && (
               <DismissibleAlert id="overview-headline" signature={`${data.headline}|${data.range.from}|${data.range.to}|${data.range.previousFrom}|${data.range.previousTo}`} onHidden={setAlertHidden}>
                 <b>Worth a look.</b> {data.headline}

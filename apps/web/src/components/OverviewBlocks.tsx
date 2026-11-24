@@ -113,7 +113,7 @@ export function LiveTile() {
   }, [reload]);
   if (!data || !data.available) return null;
   return (
-    <div className="tile live" aria-label="Active users right now">
+    <div className="tile live" aria-label="Active users right now" style={{ ['--orb' as string]: Math.min(1, data.activeUsers / 60).toFixed(2) }}>
       <div className="tile-top">
         <span className="tile-label"><span className="tile-ico"><Icon name="live" size={15} /></span><span className="tile-name">Active right now<SourceIcon source="ga4" /></span></span>
         <span className="tile-tools"><PinButton cardKey="live" label="Active right now" /><Tip label="Active right now">People using the site in the last {data.windowMinutes} minutes, according to Google Analytics. Updates every minute. It includes automated visitors GA4 does not recognise.</Tip></span>

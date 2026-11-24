@@ -20,7 +20,7 @@ export default function GlobeCanvas({ dots, size, dark, onFail }: { dots: GlobeD
       globe = createGlobe(canvas, {
         devicePixelRatio: dpr, width: size * dpr, height: size * dpr, phi: 4.2, theta: 0.25,
         dark: dark ? 1 : 0, diffuse: dark ? 1.1 : 1.3, mapSamples: 12000, mapBrightness: dark ? 5 : 6,
-        baseColor: dark ? [0.2, 0.24, 0.32] : [0.93, 0.95, 0.98], markerColor: [0.16, 0.47, 0.84], glowColor: dark ? [0.16, 0.2, 0.3] : [0.85, 0.9, 0.98],
+        baseColor: dark ? [0.14, 0.15, 0.3] : [0.93, 0.95, 0.98], markerColor: dark ? [0.45, 0.5, 1] : [0.16, 0.47, 0.84], glowColor: dark ? [0.15, 0.17, 0.5] : [0.85, 0.9, 0.98],
         markers: [],
       });
     } catch { onFail(); return; }
@@ -29,7 +29,7 @@ export default function GlobeCanvas({ dots, size, dark, onFail }: { dots: GlobeD
     const markers = (t: number): Marker[] => dotsRef.current.map((d) => ({
       location: d.location,
       size: d.live ? d.size * (1 + 0.35 * Math.sin(t / 380)) : d.size,
-      color: d.live ? [0.11, 0.69, 0.48] : [0.16, 0.47, 0.84],
+      color: d.live ? [0.11, 0.69, 0.48] : dark ? [0.45, 0.5, 1] : [0.16, 0.47, 0.84],
     }));
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
