@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Delta } from '@/components/Delta';
 import { Hint } from '@/components/Hint';
 import { Icon } from '@/components/Icon';
+import { VitalGauge } from '@/components/VitalGauge';
 import { PageHead } from '@/components/PageHead';
 import { Tip } from '@/components/Tip';
 import { TrendChart } from '@/components/TrendChart';
@@ -55,6 +56,7 @@ function Vital({ def, point, compare, compareDay, selected, onSelect }: {
         <Tip label={def.label}>{def.help}</Tip>
       </span>
       <span className="tile-value">{formatMetric(now, def.unit)}</span>
+      <VitalGauge metric={def.key} value={now} />
       <GradeChip grade={now === null ? null : grade} />
       <Bands dist={band} />
       {compare && before !== null && (

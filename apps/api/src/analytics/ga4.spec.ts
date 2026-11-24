@@ -254,6 +254,20 @@ describe('Ga4Client.realtimeUsers', () => {
     expect(await client.realtimeUsers(1000)).toMatchObject({ activeUsers: 17, windowMinutes: 30 });
   });
 
+  it('splits active users by country, biggest first, and totals them', async () => {
+    const client = new Ga4Client({ get: (k: string) => (k === 'GA4_PROPERTY_ID' ? '123' : undefined) } as never);
+    client.useRunner({
+      runReport: async () => [{}],
+      runRealtimeReport: async () => [{ rows: [
+        { dimensionValues: [{ value: 'Bangladesh' }], metricValues: [{ value: '3' }] },
+        { dimensionValues: [{ value: 'United States' }], metricValues: [{ value: '9' }] },
+      ] }],
+    });
+    const r = await client.realtimeUsers(1000);
+    expect(r.activeUsers).toBe(12);
+    expect(r.countries).toEqual([{ name: 'United States', activeUsers: 9 }, { name: 'Bangladesh', activeUsers: 3 }]);
+  });
+
   it('caches for a minute so many viewers make one call', async () => {
     const { client, calls } = make();
     await client.realtimeUsers(1000);

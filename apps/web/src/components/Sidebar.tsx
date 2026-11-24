@@ -10,6 +10,7 @@ import { useApiData } from '@/lib/useApi';
 import { Icon, type IconName } from './Icon';
 import { Logo } from './Logo';
 import { useSiteName } from '@/lib/site';
+import { useEffects } from '@/lib/effects';
 
 type Status = {
   clarity: { configured: boolean; lastRunAt: string | null; lastRunStatus: string | null; daysOfData: number; lastDay: string | null };
@@ -35,6 +36,7 @@ export function Sidebar() {
   const sp = useSearchParams();
   const [theme, toggleTheme] = useTheme();
   const siteName = useSiteName();
+  const fx = useEffects();
   const status = useApiData<Status>('/dashboard/status').data;
   const summary = useApiData<Summary>('/findings/summary').data;
   const keep = filterQuery(new URLSearchParams(sp.toString()));
@@ -112,6 +114,11 @@ export function Sidebar() {
             <button onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}><Icon name={theme === 'dark' ? 'sun' : 'moon'} size={14} />{theme === 'dark' ? 'Light' : 'Dark'}</button>
             <button onClick={logout}><Icon name="logout" size={14} />Sign out</button>
           </span>
+          <button type="button" className="fx-toggle" aria-pressed={fx.effective === 'full'}
+            title={fx.choice === 'auto' ? 'Following your device and system settings. Click to choose.' : 'Click to switch. Reduced is flat and light on the device.'}
+            onClick={() => fx.set(fx.effective === 'full' ? 'reduced' : 'full')}>
+            <Icon name="sparkle" size={13} />Visual effects: {fx.effective === 'full' ? 'Full' : 'Reduced'}{fx.choice === 'auto' && ' (auto)'}
+          </button>
         </div>
       </div>
     </aside>

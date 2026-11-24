@@ -8,6 +8,7 @@ import { isPublicPath } from '@/lib/publicPaths';
 import { LayoutProvider } from '@/lib/layout';
 import { TopProgress } from './TopProgress';
 import { Shortcuts } from './Shortcuts';
+import { DepthEffects } from './DepthEffects';
 
 // Analytics pages bring their own filter bar and padded body; every other page gets the padded body here.
 const SELF_LAID_OUT = ['/', '/traffic', '/pages', '/friction', '/ga4', '/clarity'];
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <LayoutProvider>
     <TopProgress />
     <Shortcuts />
+    <DepthEffects />
     <div className="shell">
       <Suspense fallback={<aside className="sidebar" aria-hidden="true" />}><Sidebar /></Suspense>
       <main className="main-col">

@@ -97,3 +97,12 @@ export function addDays(day: string, n: number): string {
 export const FOCUS_CHIPS: { key: 'ALL' | 'FCP' | 'LCP' | 'TBT' | 'INP' | 'CLS'; label: string }[] = [
   { key: 'ALL', label: 'All' }, { key: 'FCP', label: 'FCP' }, { key: 'LCP', label: 'LCP' }, { key: 'TBT', label: 'TBT' }, { key: 'INP', label: 'INP' }, { key: 'CLS', label: 'CLS' },
 ];
+
+/** Where "good" ends and "poor" begins for each metric (the same limits the grades use). Lower is better, except the score. */
+export const GAUGE_LIMITS: Record<string, { good: number; poor: number; higherIsBetter?: boolean }> = {
+  f_lcp: { good: 2500, poor: 4000 }, f_inp: { good: 200, poor: 500 }, f_cls: { good: 0.1, poor: 0.25 },
+  f_fcp: { good: 1800, poor: 3000 }, f_ttfb: { good: 800, poor: 1800 },
+  l_score: { good: 90, poor: 50, higherIsBetter: true },
+  l_fcp: { good: 1800, poor: 3000 }, l_lcp: { good: 2500, poor: 4000 }, l_tbt: { good: 200, poor: 600 },
+  l_cls: { good: 0.1, poor: 0.25 }, l_si: { good: 3400, poor: 5800 },
+};

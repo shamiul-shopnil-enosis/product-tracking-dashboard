@@ -4,6 +4,7 @@ import { AlertsCard } from '@/components/AlertsCard';
 import { AnalyticsPage } from '@/components/FilterBar';
 import { CoverageNotice } from '@/components/CoverageNotice';
 import { ErrorState } from '@/components/ErrorState';
+import { VisitorGlobe } from '@/components/VisitorGlobe';
 import { KeyEventsBlock, LiveTile, TopFindingsBlock, TopPagesBlock } from '@/components/OverviewBlocks';
 import { Tip } from '@/components/Tip';
 import { MarkersPanel } from '@/components/MarkersPanel';
@@ -172,6 +173,7 @@ export default function OverviewPage() {
 
           <div className="rail">
             {f.compare && <AlertsCard alerts={data.alerts} />}
+            <VisitorGlobe qs={f.rangeQs} size={236} />
             <section className="card flush" aria-label="Data health">
               <h2>Data health <Tip label="Data health">Is the data complete and fresh? Missing or approximate days make comparisons less reliable.</Tip></h2>
               <div className="kv" style={{ marginTop: 8 }}>

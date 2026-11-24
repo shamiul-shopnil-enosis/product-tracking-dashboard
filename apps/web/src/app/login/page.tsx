@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AuthScene } from '@/components/AuthScene';
 import { Logo } from '@/components/Logo';
 import { PasswordInput } from '@/components/PasswordInput';
 import { api, ApiError, type LoginContext } from '@/lib/api';
@@ -50,6 +51,7 @@ function LoginForm() {
   return (
     <div className="auth">
       <section className="auth-brand" aria-label="About this dashboard">
+        <AuthScene />
         <div className="auth-logo"><Logo width={170} chip /></div>
         <p className="auth-product">Product Analytics</p>
         <h1>See how the product is doing, in plain words.</h1>

@@ -18,7 +18,7 @@ export const metadata = {
 };
 
 // Runs before first paint so there is no flash of the wrong theme.
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('pt-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()`;
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('pt-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}try{var f=localStorage.getItem('pt-effects');if(f!=='full'&&f!=='reduced'){var m=function(q){return matchMedia(q).matches},n=navigator;f=(m('(prefers-reduced-motion: reduce)')||(n.connection&&n.connection.saveData)||(n.deviceMemory&&n.deviceMemory<=2)||(n.hardwareConcurrency&&n.hardwareConcurrency<=2))?'reduced':'full'}document.documentElement.dataset.effects=f;document.documentElement.dataset.solid=matchMedia('(prefers-reduced-transparency: reduce)').matches?'true':'false'}catch(e){document.documentElement.dataset.effects='reduced'}})()`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

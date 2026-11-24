@@ -6,7 +6,7 @@ import {
   MdOutlineStarBorder, MdOutlineSentimentVeryDissatisfied, MdOutlineAdsClick, MdOutlineWarningAmber, MdOutlineUndo,
   MdOutlineSensors, MdOutlineAdd, MdOutlineBarChart, MdOutlineSearch, MdOutlinePublic,
   MdOutlineSpeed, MdOutlineManageAccounts, MdOutlineVisibilityOff, MdOutlineContentCopy, MdOutlineLink, MdOutlineCheck,
-  MdOutlineCalendarToday, MdOutlineChevronLeft, MdOutlineChevronRight, MdOutlineExpandMore, MdOutlineClose, MdOutlineFileDownload, MdOutlineOpenInNew
+  MdOutlineCalendarToday, MdOutlineChevronLeft, MdOutlineChevronRight, MdOutlineExpandMore, MdOutlineClose, MdOutlineFileDownload, MdOutlineOpenInNew, MdOutlineAutoAwesome
 } from 'react-icons/md';
 
 // Google Material Design icons (outlined set) via react-icons. Colour comes from currentColor.
@@ -52,6 +52,7 @@ const ICONS = {
   close: MdOutlineClose,
   download: MdOutlineFileDownload,
   external: MdOutlineOpenInNew,
+  sparkle: MdOutlineAutoAwesome,
   generic: MdOutlineBarChart,
 } satisfies Record<string, IconType>;
 

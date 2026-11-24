@@ -7,6 +7,7 @@ import { CoverageNotice } from '@/components/CoverageNotice';
 import { ErrorState } from '@/components/ErrorState';
 import { Guide, Hint } from '@/components/Hint';
 import { PageSkeleton } from '@/components/Skeleton';
+import { VisitorGlobe } from '@/components/VisitorGlobe';
 import { Tip } from '@/components/Tip';
 import { TrendChart } from '@/components/TrendChart';
 import { formatChange, formatValue, type DemographicsResponse } from '@/lib/dashboard';
@@ -53,6 +54,7 @@ export default function AudiencePage() {
       )}
       {data && data.connected && (
         <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity .15s' }}>
+          {dimension === 'country' && <VisitorGlobe qs={rangeQs} size={320} title="Visitors around the world" />}
           <CoverageNotice current={data.coverage.current} previous={data.coverage.previous} />
           {data.chart.series.length > 0 && (
             <TrendChart compactHint title={`Sessions per day by ${label.toLowerCase()} (top ${data.chart.series.length})`} hint="One line per value: visits per day." unit="count"

@@ -51,6 +51,8 @@ export interface RealtimeUsers {
   activeUsers: number;
   windowMinutes: number;
   asOf: string;
+  /** Where they are, biggest first. Names are GA4's English country names. */
+  countries: Array<{ name: string; activeUsers: number }>;
 }
 /** Realtime numbers are cached this long, so many open dashboards make one GA4 call a minute. */
 export const REALTIME_CACHE_MS = 60_000;
@@ -112,7 +114,7 @@ export class Ga4Client {
 
   private realtime: { at: number; value: RealtimeUsers } | null = null;
 
-  /** Active users right now (last 30 minutes). GA4 Realtime has no dimensions here: one number. */
+  /** Active users right now (last 30 minutes), in total and by country. One GA4 call. */
   async realtimeUsers(now = Date.now()): Promise<RealtimeUsers> {
     if (this.realtime && now - this.realtime.at < REALTIME_CACHE_MS) return this.realtime.value;
     const problem = this.problem;
@@ -120,8 +122,12 @@ export class Ga4Client {
     try {
       const runner = this.getRunner();
       if (!runner.runRealtimeReport) throw new Ga4Error('server', 'GA4 client has no realtime support');
-      const [res] = (await runner.runRealtimeReport({ property: `properties/${this.propertyId}`, metrics: [{ name: 'activeUsers' }] })) as [Ga4Response];
-      const value = { activeUsers: Number(res.rows?.[0]?.metricValues?.[0]?.value ?? 0) || 0, windowMinutes: 30, asOf: new Date(now).toISOString() };
+      const [res] = (await runner.runRealtimeReport({ property: `properties/${this.propertyId}`, dimensions: [{ name: 'country' }], metrics: [{ name: 'activeUsers' }] })) as [Ga4Response];
+      const countries = (res.rows ?? [])
+        .map((r) => ({ name: r.dimensionValues?.[0]?.value ?? '', activeUsers: Number(r.metricValues?.[0]?.value ?? 0) || 0 }))
+        .filter((c) => c.activeUsers > 0)
+        .sort((a, b) => b.activeUsers - a.activeUsers);
+      const value = { activeUsers: countries.reduce((n, c) => n + c.activeUsers, 0), windowMinutes: 30, asOf: new Date(now).toISOString(), countries };
       this.realtime = { at: now, value };
       return value;
     } catch (err) {
