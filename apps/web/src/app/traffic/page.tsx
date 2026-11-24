@@ -8,6 +8,7 @@ import { ErrorState } from '@/components/ErrorState';
 import { Guide, Hint } from '@/components/Hint';
 import { G } from '@/lib/glossary';
 import { PageSkeleton } from '@/components/Skeleton';
+import { ShareDonut } from '@/components/ShareDonut';
 import { TrendChart } from '@/components/TrendChart';
 import { formatChange, formatValue, type Breakdown, type Ga4ChannelsResponse } from '@/lib/dashboard';
 import { useFilters } from '@/lib/filters';
@@ -54,6 +55,7 @@ function Ga4Traffic() {
           <CoverageNotice current={data.coverage.current} previous={data.coverage.previous} />
           <TrendChart title="Sessions per day by channel (top 4, GA4)" hint="One line per channel: visits per day. A line that rises sharply while engagement stays low often means automated traffic." unit="count" points={data.chart.points} markers={data.annotations}
             series={data.chart.series.map((s, i) => ({ key: s.id, label: s.label, color: COLORS[i] }))} />
+          <ShareDonut rows={data.rows} />
           <h2>Channels</h2>
           <Hint>Every channel in the range, biggest first. “Direct” means GA4 could not tell where the visit came from (typed address, bookmark, or automated visits with no referrer).</Hint>
           <div className="table-scroll">

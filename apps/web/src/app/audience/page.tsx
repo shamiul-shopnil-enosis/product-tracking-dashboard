@@ -8,6 +8,7 @@ import { ErrorState } from '@/components/ErrorState';
 import { Guide, Hint } from '@/components/Hint';
 import { PageSkeleton } from '@/components/Skeleton';
 import { VisitorGlobe } from '@/components/VisitorGlobe';
+import { ShareDonut } from '@/components/ShareDonut';
 import { Tip } from '@/components/Tip';
 import { TrendChart } from '@/components/TrendChart';
 import { formatChange, formatValue, type DemographicsResponse } from '@/lib/dashboard';
@@ -60,6 +61,7 @@ export default function AudiencePage() {
             <TrendChart compactHint title={`Sessions per day by ${label.toLowerCase()} (top ${data.chart.series.length})`} hint="One line per value: visits per day." unit="count"
               points={data.chart.points} markers={data.annotations} series={data.chart.series.map((s, i) => ({ key: s.id, label: s.label || '(not set)', color: COLORS[i] }))} />
           )}
+          {dimension !== 'country' && <ShareDonut rows={data.rows} />}
           <h2>{label} <Tip label={label}>{organic ? 'Only visitors who arrived from a search engine.' : 'Every visitor Google Analytics counted.'} Biggest first. “(other)” adds up the small ones.</Tip></h2>
           <div className="table-scroll">
             <table>

@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Tip } from './Tip';
 import { formatValue, type Marker, type Unit } from '@/lib/dashboard';
 import { fmtDate } from '@/lib/date';
 import { useReducedMotion } from '@/lib/motion';
+import { useEffects } from '@/lib/effects';
+import { webglWorks } from '@/lib/webgl';
+
+const BarsCanvas = dynamic(() => import('./chart3d/BarsCanvas'), { ssr: false, loading: () => <div className="chart3d-wait" aria-hidden /> });
+const MODE_KEY = 'pt-chart3d';
 
 type DataPoint = Record<string, string | number | null>;
 export type SeriesDef = { key: string; label: string; color: string };
@@ -21,6 +27,20 @@ const PREV = '__prev';
 export function TrendChart({ title, hint, compactHint, height = 230, unit, points, series, note, markers = [], prev }: Props) {
   const [table, setTable] = useState(false);
   const reduced = useReducedMotion();
+  const fx = useEffects();
+  // 3D bars: Full effects, a browser with WebGL and enough width. The choice is remembered; flat lines are always one click away.
+  const [gl, setGl] = useState(false); const [wide, setWide] = useState(false); const [dark, setDark] = useState(false); const [want3d, setWant3d] = useState(true);
+  useEffect(() => {
+    setGl(webglWorks());
+    try { setWant3d(localStorage.getItem(MODE_KEY) !== 'flat'); } catch { /* ignore */ }
+    const q = matchMedia('(min-width: 760px)'); const w = () => setWide(q.matches); w(); q.addEventListener('change', w);
+    const read = () => setDark(document.documentElement.dataset.theme === 'dark'); read();
+    const mo = new MutationObserver(read); mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { q.removeEventListener('change', w); mo.disconnect(); };
+  }, []);
+  const can3d = fx.effective === 'full' && gl && wide && !markers.some((m) => points.some((p) => p.date === m.date));
+  const show3d = can3d && want3d;
+  const pick = (v: boolean) => { setWant3d(v); try { localStorage.setItem(MODE_KEY, v ? '3d' : 'flat'); } catch { /* ignore */ } };
   const data: DataPoint[] = points.map((p, i) => (prev ? { ...p, [PREV]: prev.values[i] ?? null } : p));
   const hasData = points.some((p) => series.some((s) => p[s.key] !== null));
   const visible = markers.filter((m) => points.some((p) => p.date === m.date)); // only days the chart shows
@@ -30,7 +50,10 @@ export function TrendChart({ title, hint, compactHint, height = 230, unit, point
     <section className="chart" aria-label={title}>
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <span className="chart-title">{title}{(hint || note) && <> <Tip label={title} side="left">{hint && <span className="tp">{hint}</span>}{note && <span className="tp">{note}</span>}</Tip></>}</span>
-        {hasData && <button className="link" onClick={() => setTable(!table)}>{table ? 'View chart' : 'View as table'}</button>}
+        <span className="row" style={{ gap: 10 }}>
+          {hasData && can3d && !table && <span className="seg" role="group" aria-label="Chart style"><button type="button" aria-pressed={!want3d} onClick={() => pick(false)}>Lines</button><button type="button" aria-pressed={want3d} onClick={() => pick(true)}>3D</button></span>}
+          {hasData && <button className="link" onClick={() => setTable(!table)}>{table ? 'View chart' : 'View as table'}</button>}
+        </span>
       </div>
       {!hasData ? (
         <div className="empty"><b>No full days stored yet</b>This chart fills in after the nightly runs.</div>
@@ -49,6 +72,8 @@ export function TrendChart({ title, hint, compactHint, height = 230, unit, point
             </tbody>
           </table>
         </div>
+      ) : show3d ? (
+        <BarsCanvas points={points} series={series} prev={prev} unit={unit} height={height + 40} dark={dark} />
       ) : (
         <div style={{ height }}>
           <ResponsiveContainer width="100%" height="100%">
