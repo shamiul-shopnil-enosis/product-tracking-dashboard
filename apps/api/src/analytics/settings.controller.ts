@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Put } from '@nestjs/common';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { AuthUser, CurrentUser, MinRole } from '../common/decorators';
-import { Role } from '../common/roles';
+import { AuthUser, CurrentUser, SuperAdminOnly } from '../common/decorators';
 import { SettingsService } from './settings.service';
 
 export class SiteDto {
@@ -16,9 +15,9 @@ export class Ga4Dto {
 }
 export class PagespeedDto { @IsString() @MaxLength(100) apiKey: string; }
 
-// Connections and the site name. Admins only; secret values can be replaced but are never sent back.
+// Connections and the site name of the active profile. Super admins only; secret values can be replaced but are never sent back.
 @Controller('settings')
-@MinRole(Role.Admin)
+@SuperAdminOnly()
 export class SettingsController {
   constructor(private readonly settings: SettingsService) {}
 

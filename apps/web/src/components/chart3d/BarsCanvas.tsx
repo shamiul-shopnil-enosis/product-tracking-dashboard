@@ -16,7 +16,7 @@ type Label = { x: number; y: number; text: string };
 
 const DEPTH = 1.1; // how far behind the previous period sits
 const W = 10;      // chart width in scene units (the camera is fitted so this spans the whole box)
-const PAD_L = 52; const PAD_R = 10; const PAD_B = 34; const PAD_T = 12; // pixels kept free for the axis numbers
+const PAD_L = 52; const PAD_R = 10; const PAD_B = 34; const PAD_T = 26; // pixels kept free for the axis numbers
 
 function niceMax(v: number) {
   if (v <= 0) return 1;

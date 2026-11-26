@@ -8,6 +8,8 @@ import { Ga4SyncService } from '../analytics/ga4-sync.service';
 import { ClaritySyncService } from '../analytics/clarity-sync.service';
 import { SpeedService } from '../analytics/speed.service';
 import { Public } from '../common/decorators';
+import { ProfilesService } from '../profiles/profiles.service';
+import { runWithProfile } from '../profiles/profile-context';
 import { providerHealth, ProviderHealth } from './sync-health';
 
 @Controller('health')
@@ -20,6 +22,7 @@ export class HealthController {
     private readonly speed: SpeedService,
     private readonly config: ConfigService,
     private readonly settings: SettingsService,
+    private readonly profiles: ProfilesService,
   ) {}
 
   private async sources(): Promise<[string, boolean][]> {
@@ -35,15 +38,20 @@ export class HealthController {
     return { status: db === 'up' ? 'ok' : 'degraded', db };
   }
 
-  /** For an uptime monitor: HTTP 200 body with `syncOk` false when a connected source has not synced in 36 hours. */
+  /** For an uptime monitor: HTTP 200 body with `syncOk` false when a connected source of any profile has not synced in 36 hours. */
   @Public()
   @Get('sync')
   async sync() {
-    const providers: ProviderHealth[] = [];
-    for (const [name, enabled] of await this.sources()) {
-      if (!enabled) continue;
-      const runs = await this.runs.find({ provider: name }).sort({ startedAt: -1 }).limit(20);
-      providers.push(providerHealth(name, runs, new Date()));
+    const providers: (ProviderHealth & { profile?: string })[] = [];
+    const list = this.profiles.all();
+    for (const p of list) {
+      await runWithProfile(p.id, async () => {
+        for (const [name, enabled] of await this.sources()) {
+          if (!enabled) continue;
+          const runs = await this.runs.find({ provider: name }).sort({ startedAt: -1 }).limit(20);
+          providers.push({ ...providerHealth(name, runs, new Date()), ...(list.length > 1 ? { profile: p.name } : {}) });
+        }
+      });
     }
     return { syncOk: providers.every((p) => p.ok), providers };
   }
@@ -55,13 +63,20 @@ export class HealthController {
   @Public()
   @Get('context')
   async context() {
-    let latest: Date | null = null;
-    for (const [name, enabled] of await this.sources()) {
-      if (!enabled) continue;
-      const runs = await this.runs.find({ provider: name }).sort({ startedAt: -1 }).limit(20);
-      const at = providerHealth(name, runs, new Date()).lastSuccessAt;
-      if (at && (!latest || at > latest)) latest = at;
-    }
-    return { dataUpdatedAt: latest ? latest.toISOString() : null, accessContact: this.config.get<string>('ACCESS_CONTACT')?.trim() || null, siteName: this.settings.siteName() };
+    // The sign-in page has no person yet, so it shows the first profile's freshness and name only.
+    const first = this.profiles.defaultProfile();
+    const info = first
+      ? await runWithProfile(first.id, async () => {
+          let latest: Date | null = null;
+          for (const [name, enabled] of await this.sources()) {
+            if (!enabled) continue;
+            const runs = await this.runs.find({ provider: name }).sort({ startedAt: -1 }).limit(20);
+            const at = providerHealth(name, runs, new Date()).lastSuccessAt;
+            if (at && (!latest || at > latest)) latest = at;
+          }
+          return { latest, siteName: this.settings.siteName() };
+        })
+      : { latest: null as Date | null, siteName: this.settings.siteName() };
+    return { dataUpdatedAt: info.latest ? info.latest.toISOString() : null, accessContact: this.config.get<string>('ACCESS_CONTACT')?.trim() || null, siteName: info.siteName };
   }
 }

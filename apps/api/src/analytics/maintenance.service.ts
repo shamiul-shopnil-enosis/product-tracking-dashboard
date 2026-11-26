@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { ProfilesService } from '../profiles/profiles.service';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,12 +12,12 @@ import { SyncRun, SyncRunDocument } from './analytics.schema';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function alertText(problems: ProviderHealth[]): string {
+export function alertText(problems: ProviderHealth[], profile = ''): string {
   const lines = problems.map((p) => {
     const since = p.lastSuccessAt ? `last success ${p.lastSuccessAt.toISOString()}` : 'never succeeded';
     return `- ${p.provider}: ${since}${p.lastError ? `, last error: ${p.lastError}` : ''}`;
   });
-  return `Product analytics: data sync needs attention\n${lines.join('\n')}`;
+  return `Product analytics${profile ? ` (${profile})` : ''}: data sync needs attention\n${lines.join('\n')}`;
 }
 
 @Injectable()
@@ -29,7 +30,12 @@ export class MaintenanceService {
     private readonly ga4: Ga4SyncService,
     private readonly speed: SpeedService,
     @InjectModel(SyncRun.name) private readonly runs: Model<SyncRunDocument>,
+    @Optional() private readonly profiles?: ProfilesService,
   ) {}
+
+  private each(fn: (name: string) => Promise<void>): Promise<void> {
+    return this.profiles ? this.profiles.each((p) => fn(p.name)) : fn('');
+  }
 
   /**
    * Sync run logs are bookkeeping, so they are trimmed (default 180 days). Metric snapshots are the
@@ -39,19 +45,23 @@ export class MaintenanceService {
   async trimRunLogs() {
     const days = Number(this.config.get('RETENTION_RUN_DAYS', '180'));
     if (!Number.isFinite(days) || days < 30) return; // refuse nonsense values rather than delete recent logs
-    const res = await this.runs.deleteMany({ startedAt: { $lt: new Date(Date.now() - days * DAY_MS) }, status: { $ne: 'running' } });
-    if (res.deletedCount) this.logger.log(`Trimmed ${res.deletedCount} sync run log(s) older than ${days} days`);
+    await this.each(async () => {
+      const res = await this.runs.deleteMany({ startedAt: { $lt: new Date(Date.now() - days * DAY_MS) }, status: { $ne: 'running' } });
+      if (res.deletedCount) this.logger.log(`Trimmed ${res.deletedCount} sync run log(s) older than ${days} days`);
+    });
   }
 
   /** Daily at 06:00 UTC, after both nightly syncs: tell someone when a connected source has gone stale. */
   @Cron('0 6 * * *', { timeZone: 'UTC' })
   async checkSyncs() {
-    try {
-      const problems = await this.problems();
-      if (problems.length) await this.notify(alertText(problems));
-    } catch (err) {
-      this.logger.error(`Sync check failed: ${(err as Error).message}`);
-    }
+    await this.each(async (name) => {
+      try {
+        const problems = await this.problems();
+        if (problems.length) await this.notify(alertText(problems, name));
+      } catch (err) {
+        this.logger.error(`Sync check failed: ${(err as Error).message}`);
+      }
+    });
   }
 
   async problems(now = new Date()): Promise<ProviderHealth[]> {

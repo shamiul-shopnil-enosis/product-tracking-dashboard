@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY, MIN_ROLE_KEY } from '../common/decorators';
+import { IS_PUBLIC_KEY, MIN_ROLE_KEY, SUPER_ADMIN_KEY } from '../common/decorators';
 import { hasMinRole, Role } from '../common/roles';
 
 @Injectable()
@@ -10,6 +10,12 @@ export class RolesGuard implements CanActivate {
   canActivate(ctx: ExecutionContext): boolean {
     const targets = [ctx.getHandler(), ctx.getClass()];
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, targets)) return true;
+
+    if (this.reflector.getAllAndOverride<boolean>(SUPER_ADMIN_KEY, targets)) {
+      const u = ctx.switchToHttp().getRequest().user;
+      if (!u?.superAdmin) throw new ForbiddenException();
+      return true;
+    }
 
     const minimum = this.reflector.getAllAndOverride<Role | undefined>(MIN_ROLE_KEY, targets);
     if (!minimum) return true; // any signed-in user

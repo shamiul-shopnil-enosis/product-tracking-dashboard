@@ -76,7 +76,7 @@ export default function DataSources() {
     <>
       <h1>Data sources</h1>
       <Hint>Admin only. This page shows whether the dashboard is receiving data from Microsoft Clarity and Google Analytics, when it last synced, and lets you refresh by hand. Normally nothing needs doing here: the syncs run every night by themselves.</Hint>
-      <ConnectionSettings />
+      {user?.superAdmin && <ConnectionSettings />}
       <h2>Microsoft Clarity</h2>
       {error && <p className="error" role="alert">{error}</p>}
       {status && (

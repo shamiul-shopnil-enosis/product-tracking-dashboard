@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { currentProfileId } from '../profiles/profile-context';
 import { RuntimeConfig } from '../settings/runtime-config';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { existsSync } from 'fs';
@@ -59,8 +60,11 @@ export const REALTIME_CACHE_MS = 60_000;
 
 @Injectable()
 export class Ga4Client {
-  private runner: Ga4Runner | null = null;
-  private ownRunner = false;
+  // One connection and one realtime answer per profile, so profiles never share keys or numbers.
+  private readonly runners = new Map<string, Ga4Runner>();
+  private readonly ownRunners = new Set<string>();
+  private readonly realtimes = new Map<string, { at: number; value: RealtimeUsers }>();
+  private key(): string { return currentProfileId() ?? '__default__'; }
 
   constructor(private readonly config: RuntimeConfig) {}
 
@@ -94,31 +98,34 @@ export class Ga4Client {
 
   /** Test hook: use a fake instead of the real Google client. */
   useRunner(r: Ga4Runner) {
-    this.runner = r;
+    this.runners.set(this.key(), r);
   }
 
   private getRunner(): Ga4Runner {
-    if (!this.runner) {
+    const k = this.key();
+    let runner = this.runners.get(k);
+    if (!runner) {
       const json = this.keyJson;
-      this.runner = new BetaAnalyticsDataClient(json ? { credentials: json as never } : { keyFilename: this.keyFile }) as unknown as Ga4Runner;
-      this.ownRunner = true;
+      runner = new BetaAnalyticsDataClient(json ? { credentials: json as never } : { keyFilename: this.keyFile }) as unknown as Ga4Runner;
+      this.runners.set(k, runner);
+      this.ownRunners.add(k);
     }
-    return this.runner;
+    return runner;
   }
 
   /** Forget the connection and cached numbers, after the property or key was changed. */
   reset() {
-    if (this.ownRunner) { this.runner = null; this.ownRunner = false; }
-    this.realtime = null;
+    const k = this.key();
+    if (this.ownRunners.has(k)) { this.runners.delete(k); this.ownRunners.delete(k); }
+    this.realtimes.delete(k);
   }
-
-  private realtime: { at: number; value: RealtimeUsers } | null = null;
 
   /** Active users right now (last 30 minutes), in total and by country. One GA4 call. */
   async realtimeUsers(now = Date.now()): Promise<RealtimeUsers> {
-    if (this.realtime && now - this.realtime.at < REALTIME_CACHE_MS) return this.realtime.value;
+    const cached = this.realtimes.get(this.key());
+    if (cached && now - cached.at < REALTIME_CACHE_MS) return cached.value;
     const problem = this.problem;
-    if (problem && !this.runner) throw new Ga4Error('not_configured', problem);
+    if (problem && !this.runners.has(this.key())) throw new Ga4Error('not_configured', problem);
     try {
       const runner = this.getRunner();
       if (!runner.runRealtimeReport) throw new Ga4Error('server', 'GA4 client has no realtime support');
@@ -128,7 +135,7 @@ export class Ga4Client {
         .filter((c) => c.activeUsers > 0)
         .sort((a, b) => b.activeUsers - a.activeUsers);
       const value = { activeUsers: countries.reduce((n, c) => n + c.activeUsers, 0), windowMinutes: 30, asOf: new Date(now).toISOString(), countries };
-      this.realtime = { at: now, value };
+      this.realtimes.set(this.key(), { at: now, value });
       return value;
     } catch (err) {
       throw err instanceof Ga4Error ? err : errorForGrpc(err);
@@ -137,7 +144,7 @@ export class Ga4Client {
 
   async report(req: Ga4ReportRequest): Promise<Ga4Response> {
     const problem = this.problem;
-    if (problem && !this.runner) throw new Ga4Error('not_configured', problem);
+    if (problem && !this.runners.has(this.key())) throw new Ga4Error('not_configured', problem);
     try {
       const [res] = await this.getRunner().runReport({
         property: `properties/${this.propertyId}`,

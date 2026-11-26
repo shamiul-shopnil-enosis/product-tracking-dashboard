@@ -1,12 +1,15 @@
 import { Global, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AppSetting, AppSettingSchema } from '../analytics/analytics.schema';
+import { Profile, ProfileSchema } from '../profiles/profile.schema';
+import { ProfilesController } from '../profiles/profiles.controller';
+import { ProfilesService } from '../profiles/profiles.service';
 import { RuntimeConfig } from './runtime-config';
 
 @Global()
 @Module({
-  imports: [MongooseModule.forFeature([{ name: AppSetting.name, schema: AppSettingSchema }])],
-  providers: [RuntimeConfig],
-  exports: [RuntimeConfig],
+  imports: [MongooseModule.forFeature([{ name: Profile.name, schema: ProfileSchema }])],
+  controllers: [ProfilesController],
+  providers: [RuntimeConfig, ProfilesService],
+  exports: [RuntimeConfig, ProfilesService],
 })
 export class SettingsModule {}

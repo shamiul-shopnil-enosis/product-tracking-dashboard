@@ -1,4 +1,5 @@
-import { ConflictException, HttpException, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, Logger, OnApplicationBootstrap, Optional } from '@nestjs/common';
+import { ProfilesService } from '../profiles/profiles.service';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
@@ -34,7 +35,13 @@ export class ClaritySyncService implements OnApplicationBootstrap {
     private readonly config: ConfigService,
     @InjectModel(MetricSnapshot.name) private readonly snapshots: Model<MetricSnapshotDocument>,
     @InjectModel(SyncRun.name) private readonly runs: Model<SyncRunDocument>,
+    @Optional() private readonly profiles?: ProfilesService,
   ) {}
+
+  /** Background work runs once for every profile, each with its own token and its own 10-calls-a-day budget. */
+  private each(fn: () => Promise<void>): Promise<void> {
+    return this.profiles ? this.profiles.each(fn) : fn();
+  }
 
   get enabled(): boolean {
     return this.config.get<string>('CLARITY_SYNC_ENABLED', 'true') !== 'false' && this.client.configured;
@@ -57,7 +64,7 @@ export class ClaritySyncService implements OnApplicationBootstrap {
   onApplicationBootstrap() {
     // Not awaited and delayed a little, so a slow Clarity call never holds up startup.
     setTimeout(() => {
-      this.catchUp().catch((err) => this.logger.error(`Clarity catch-up failed: ${(err as Error).message}`));
+      this.each(() => this.catchUp()).catch((err) => this.logger.error(`Clarity catch-up failed: ${(err as Error).message}`));
     }, 10_000);
   }
 
@@ -83,13 +90,15 @@ export class ClaritySyncService implements OnApplicationBootstrap {
   /** Nightly job: one clean UTC day, taken just after midnight UTC. */
   @Cron('5 0 * * *', { timeZone: 'UTC' })
   async nightly() {
-    if (!this.enabled) return;
-    try {
-      const now = new Date();
-      await this.run({ trigger: 'cron', keys: BREAKDOWN_KEYS, numOfDays: 1, window: 'day', date: previousUtcDay(now) });
-    } catch (err) {
-      this.logger.error(`Nightly Clarity sync did not run: ${(err as Error).message}`);
-    }
+    await this.each(async () => {
+      if (!this.enabled) return;
+      try {
+        const now = new Date();
+        await this.run({ trigger: 'cron', keys: BREAKDOWN_KEYS, numOfDays: 1, window: 'day', date: previousUtcDay(now) });
+      } catch (err) {
+        this.logger.error(`Nightly Clarity sync did not run: ${(err as Error).message}`);
+      }
+    });
   }
 
   /** Admin refresh: the last 24 hours, stored as today's rolling snapshot. */

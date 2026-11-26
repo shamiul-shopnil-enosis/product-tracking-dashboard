@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { usePathname, useRouter } from 'next/navigation';
 import { api, ApiError, type User } from '@/lib/api';
 import { isPublicPath } from '@/lib/publicPaths';
+import { getActiveProfileId, rememberProfile } from '@/lib/profile';
 
 type AuthState = { user: User | null; loading: boolean; logout: () => Promise<void> };
 const Ctx = createContext<AuthState>({ user: null, loading: true, logout: async () => {} });
@@ -24,6 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((u) => {
         if (cancelled) return;
         wasSignedIn.current = true;
+        // The server says which profile is in use (it falls back to the first one when the remembered one is gone or no longer allowed).
+        if (u.activeProfileId && getActiveProfileId() !== u.activeProfileId) rememberProfile(u.activeProfileId);
         setUser(u);
       })
       .catch((e) => {

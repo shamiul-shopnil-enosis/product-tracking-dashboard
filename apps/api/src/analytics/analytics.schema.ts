@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { profileScope } from '../profiles/scope.plugin';
 
 @Schema({ timestamps: true })
 export class MetricSnapshot {
@@ -16,7 +17,8 @@ export class MetricSnapshot {
 }
 export type MetricSnapshotDocument = HydratedDocument<MetricSnapshot>;
 export const MetricSnapshotSchema = SchemaFactory.createForClass(MetricSnapshot);
-MetricSnapshotSchema.index({ provider: 1, date: 1, window: 1, breakdown: 1 }, { unique: true });
+MetricSnapshotSchema.plugin(profileScope);
+MetricSnapshotSchema.index({ profileId: 1, provider: 1, date: 1, window: 1, breakdown: 1 }, { unique: true });
 
 @Schema({ _id: false })
 export class SyncResult {
@@ -40,29 +42,34 @@ export class SyncRun {
 }
 export type SyncRunDocument = HydratedDocument<SyncRun>;
 export const SyncRunSchema = SchemaFactory.createForClass(SyncRun);
-SyncRunSchema.index({ provider: 1, startedAt: -1 });
+SyncRunSchema.plugin(profileScope);
+SyncRunSchema.index({ profileId: 1, provider: 1, startedAt: -1 });
 
 /** A small named setting an admin can change, for example the time of the daily speed check. */
 @Schema({ timestamps: true })
 export class AppSetting {
-  @Prop({ required: true, unique: true }) key: string;
+  @Prop({ required: true }) key: string;
   @Prop({ required: true }) value: string;
 }
 export type AppSettingDocument = HydratedDocument<AppSetting>;
 export const AppSettingSchema = SchemaFactory.createForClass(AppSetting);
+AppSettingSchema.plugin(profileScope);
+AppSettingSchema.index({ profileId: 1, key: 1 }, { unique: true });
 
 // ---- page speed (PageSpeed Insights) ----
 
 /** A page checked every day. Removing one switches it off but keeps its history. */
 @Schema({ timestamps: true })
 export class SpeedTarget {
-  @Prop({ required: true, unique: true }) url: string;
+  @Prop({ required: true }) url: string;
   @Prop() label?: string;
   @Prop({ default: true }) active: boolean;
   @Prop() createdBy?: string;
 }
 export type SpeedTargetDocument = HydratedDocument<SpeedTarget>;
 export const SpeedTargetSchema = SchemaFactory.createForClass(SpeedTarget);
+SpeedTargetSchema.plugin(profileScope);
+SpeedTargetSchema.index({ profileId: 1, url: 1 }, { unique: true });
 
 /** One finished (or failed) test of one page on one device. Small on purpose: no Lighthouse report is kept. */
 @Schema({ timestamps: true })
@@ -83,8 +90,9 @@ export class SpeedResult {
 }
 export type SpeedResultDocument = HydratedDocument<SpeedResult>;
 export const SpeedResultSchema = SchemaFactory.createForClass(SpeedResult);
-SpeedResultSchema.index({ url: 1, strategy: 1, runAt: -1 });
-SpeedResultSchema.index({ day: 1, trigger: 1 });
+SpeedResultSchema.plugin(profileScope);
+SpeedResultSchema.index({ profileId: 1, url: 1, strategy: 1, runAt: -1 });
+SpeedResultSchema.index({ profileId: 1, day: 1, trigger: 1 });
 
 /** The recommendations from the most recent test only; older ones are not kept. */
 @Schema({ timestamps: true })
@@ -96,7 +104,8 @@ export class SpeedAudits {
 }
 export type SpeedAuditsDocument = HydratedDocument<SpeedAudits>;
 export const SpeedAuditsSchema = SchemaFactory.createForClass(SpeedAudits);
-SpeedAuditsSchema.index({ url: 1, strategy: 1 }, { unique: true });
+SpeedAuditsSchema.plugin(profileScope);
+SpeedAuditsSchema.index({ profileId: 1, url: 1, strategy: 1 }, { unique: true });
 
 /** A manual test in progress. Kept in the database so a restart cannot leave it half-forgotten. */
 @Schema({ timestamps: true })
@@ -110,4 +119,5 @@ export class SpeedJob {
 }
 export type SpeedJobDocument = HydratedDocument<SpeedJob>;
 export const SpeedJobSchema = SchemaFactory.createForClass(SpeedJob);
+SpeedJobSchema.plugin(profileScope);
 SpeedJobSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7 * 24 * 3600 });

@@ -12,7 +12,7 @@ import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { isValidObjectId, Model } from 'mongoose';
 import { Role } from '../common/roles';
-import { CreateUserInput, InviteUserDto, MIN_PASSWORD_LENGTH, UpdateUserDto } from './users.dto';
+import { AccessDto, CreateUserInput, InviteUserDto, MIN_PASSWORD_LENGTH, UpdateUserDto } from './users.dto';
 import { LinkPurpose, User, UserDocument } from './user.schema';
 
 export const LINK_TTL_MS = 72 * 60 * 60 * 1000;
@@ -24,6 +24,8 @@ export interface PublicUser {
   email: string;
   role: Role;
   active: boolean;
+  superAdmin: boolean;
+  memberships: Array<{ profileId: string; role: Role }>;
 }
 
 export type UserStatus = 'active' | 'invited' | 'deactivated';
@@ -36,7 +38,7 @@ export interface AdminUser extends PublicUser {
 }
 
 export function toPublic(u: UserDocument): PublicUser {
-  return { id: u.id, name: u.name, email: u.email, role: u.role, active: u.active };
+  return { id: u.id, name: u.name, email: u.email, role: u.role, active: u.active, superAdmin: u.superAdmin === true, memberships: (u.memberships ?? []).map((m) => ({ profileId: m.profileId, role: m.role })) };
 }
 
 export function toAdmin(u: UserDocument, now = new Date()): AdminUser {
@@ -98,7 +100,7 @@ export class UsersService implements OnModuleInit {
     return users.map((u) => toAdmin(u, now));
   }
 
-  private async insert(fields: { name: string; email: string; role: Role; passwordHash?: string }) {
+  private async insert(fields: { name: string; email: string; role: Role; passwordHash?: string; superAdmin?: boolean; memberships?: Array<{ profileId: string; role: Role }> }) {
     try {
       return await this.model.create({ ...fields, name: fields.name.trim() });
     } catch (err) {
@@ -116,13 +118,17 @@ export class UsersService implements OnModuleInit {
       email: input.email,
       role: input.role,
       passwordHash: await this.hash(input.password),
+      superAdmin: input.role === Role.Admin,
     });
     return toPublic(user);
   }
 
   /** Add a person with no password; the returned token goes into their one-time invite link. */
   async invite(dto: InviteUserDto) {
-    const user = await this.insert({ name: dto.name, email: dto.email, role: dto.role });
+    const user = await this.insert({
+      name: dto.name, email: dto.email, role: dto.role, superAdmin: dto.superAdmin === true,
+      memberships: [...new Set(dto.profileIds ?? [])].map((profileId) => ({ profileId, role: dto.role })),
+    });
     return this.issueLink(user.id);
   }
 
@@ -178,6 +184,7 @@ export class UsersService implements OnModuleInit {
     if (!user) throw new NotFoundException('User not found');
     if (dto.name !== undefined) user.name = dto.name.trim();
     if (dto.role !== undefined) user.role = dto.role;
+    if (dto.superAdmin !== undefined) user.superAdmin = dto.superAdmin;
     if (dto.active !== undefined) {
       if (user.active && !dto.active) {
         // Deactivating ends every session and cancels any pending link, so reactivating cannot revive them.
@@ -188,6 +195,21 @@ export class UsersService implements OnModuleInit {
       }
       user.active = dto.active;
     }
+    await user.save();
+    return toAdmin(user);
+  }
+
+  /** Replace the list of profiles a person may open, and their role in each. */
+  async setAccess(id: string, dto: AccessDto) {
+    const user = await this.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+    const seen = new Set<string>();
+    for (const m of dto.memberships) {
+      if (seen.has(m.profileId)) throw new BadRequestException('A profile is listed twice');
+      seen.add(m.profileId);
+    }
+    user.memberships = dto.memberships.map((m) => ({ profileId: m.profileId, role: m.role }));
+    user.markModified('memberships');
     await user.save();
     return toAdmin(user);
   }

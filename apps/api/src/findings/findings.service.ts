@@ -1,3 +1,4 @@
+import { requireProfileId } from '../profiles/profile-context';
 import { BadRequestException, Injectable, NotFoundException, PayloadTooLargeException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
@@ -99,7 +100,7 @@ export class FindingsService {
 
   private async nextRef(): Promise<number> {
     const c = await this.counters.findOneAndUpdate(
-      { _id: 'finding' },
+      { _id: `finding:${requireProfileId()}` },
       { $inc: { seq: 1 } },
       { new: true, upsert: true },
     );

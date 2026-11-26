@@ -11,6 +11,7 @@ const make = (readyState: number, runs: unknown[] = [], enabled = { clarity: tru
     { enabled: async () => false } as never,
     { get: () => contact } as never,
     { siteName: () => 'Enosis Outsourcing' } as never,
+    { all: () => [{ id: 'p1', name: 'Enosis Outsourcing' }], defaultProfile: () => ({ id: 'p1', name: 'Enosis Outsourcing' }) } as never,
   );
 };
 

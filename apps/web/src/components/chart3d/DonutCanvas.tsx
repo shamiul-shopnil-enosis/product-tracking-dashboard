@@ -24,9 +24,9 @@ export default function DonutCanvas({ items, size, dark, totalLabel, format }: {
     const camera = new PerspectiveCamera(32, 1, 0.1, 100); camera.position.set(0, 0, 11); camera.lookAt(0, 0, 0);
     scene.add(new AmbientLight(0xffffff, dark ? 1.15 : 1.35));
     const sun = new DirectionalLight(0xffffff, dark ? 2.2 : 2.5); sun.position.set(-5, 6, 8); scene.add(sun);
-    const ring = new Group(); ring.rotation.x = -0.82; scene.add(ring);
+    const ring = new Group(); ring.rotation.x = -0.6; scene.add(ring);
 
-    const R = 2.6; const r = 1.55; const gap = 0.02;
+    const R = 2.6; const r = 1.8; const gap = 0.02;
     const meshes: { mesh: Mesh; mid: number; i: number }[] = [];
     const geos: ExtrudeGeometry[] = []; const mats: MeshStandardMaterial[] = [];
     let a0 = Math.PI / 2;

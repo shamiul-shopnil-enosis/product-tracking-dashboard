@@ -40,7 +40,11 @@ export class JwtAuthGuard implements CanActivate {
       this.session.setCookie(http.getResponse(), await this.session.sign(user, claims.st));
     }
 
-    req.user = { id: user.id, name: user.name, email: user.email, role: user.role };
+    req.user = {
+      id: user.id, name: user.name, email: user.email, role: user.role,
+      superAdmin: user.superAdmin === true,
+      memberships: (user.memberships ?? []).map((m) => ({ profileId: m.profileId, role: m.role })),
+    };
     return true;
   }
 }

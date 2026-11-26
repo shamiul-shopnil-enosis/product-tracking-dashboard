@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { profileScope } from '../profiles/scope.plugin';
 import { BANDS, EFFORTS, FINDING_TYPES, REACHES, STATUSES } from './findings.constants';
 
 @Schema({ _id: false })
@@ -27,7 +28,7 @@ export class ResultCheck {
 
 @Schema({ timestamps: true })
 export class Finding {
-  @Prop({ required: true, unique: true }) ref: number;
+  @Prop({ required: true }) ref: number;
   @Prop({ required: true, trim: true }) title: string;
   @Prop({ required: true, enum: FINDING_TYPES }) type: string;
   @Prop({ required: true, trim: true }) where: string;
@@ -67,8 +68,10 @@ export class Finding {
 
 export type FindingDocument = HydratedDocument<Finding>;
 export const FindingSchema = SchemaFactory.createForClass(Finding);
-FindingSchema.index({ effectiveBandRank: -1, effectiveScore: -1 });
-FindingSchema.index({ status: 1, type: 1, severity: 1 });
+FindingSchema.plugin(profileScope);
+FindingSchema.index({ profileId: 1, ref: 1 }, { unique: true });
+FindingSchema.index({ profileId: 1, effectiveBandRank: -1, effectiveScore: -1 });
+FindingSchema.index({ profileId: 1, status: 1, type: 1, severity: 1 });
 
 @Schema({ collection: 'counters' })
 export class Counter {

@@ -1,11 +1,12 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import { AuthUser, CurrentUser, MinRole } from '../common/decorators';
+import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { AuthUser, CurrentUser, NoProfile, SuperAdminOnly } from '../common/decorators';
 import { Role } from '../common/roles';
-import { InviteUserDto, UpdateUserDto } from './users.dto';
+import { AccessDto, InviteUserDto, UpdateUserDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
-@MinRole(Role.Admin)
+@NoProfile()
+@SuperAdminOnly()
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 
@@ -26,10 +27,16 @@ export class UsersController {
     return this.users.issueLink(id);
   }
 
+  /** Which profiles a person may open, and their role in each. */
+  @Put(':id/access')
+  access(@Param('id') id: string, @Body() dto: AccessDto) {
+    return this.users.setAccess(id, dto);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() me: AuthUser) {
     // Prevent an admin from locking themselves (or the last admin) out.
-    if (id === me.id && ((dto.role && dto.role !== Role.Admin) || dto.active === false)) {
+    if (id === me.id && ((dto.role && dto.role !== Role.Admin) || dto.active === false || dto.superAdmin === false)) {
       throw new BadRequestException('You cannot demote or deactivate your own account');
     }
     return this.users.update(id, dto);

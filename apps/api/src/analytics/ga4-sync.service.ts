@@ -1,4 +1,5 @@
-import { ConflictException, HttpException, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, Logger, OnApplicationBootstrap, Optional } from '@nestjs/common';
+import { ProfilesService } from '../profiles/profiles.service';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
@@ -27,7 +28,13 @@ export class Ga4SyncService implements OnApplicationBootstrap {
     private readonly config: ConfigService,
     @InjectModel(MetricSnapshot.name) private readonly snapshots: Model<MetricSnapshotDocument>,
     @InjectModel(SyncRun.name) private readonly runs: Model<SyncRunDocument>,
+    @Optional() private readonly profiles?: ProfilesService,
   ) {}
+
+  /** Background work runs once for every profile, each with its own property and key. */
+  private each(fn: () => Promise<void>): Promise<void> {
+    return this.profiles ? this.profiles.each(fn) : fn();
+  }
 
   get enabled(): boolean {
     return this.config.get<string>('GA4_SYNC_ENABLED', 'true') !== 'false' && this.client.configured;
@@ -36,7 +43,7 @@ export class Ga4SyncService implements OnApplicationBootstrap {
   /** After a start: pull the history the first time, otherwise catch up if the last run is old. */
   onApplicationBootstrap() {
     setTimeout(() => {
-      this.startup().catch((err) => this.logger.error(`GA4 startup sync failed: ${(err as Error).message}`));
+      this.each(() => this.startup()).catch((err) => this.logger.error(`GA4 startup sync failed: ${(err as Error).message}`));
     }, 15_000);
   }
 
@@ -56,12 +63,14 @@ export class Ga4SyncService implements OnApplicationBootstrap {
   /** Nightly: GA4 has usually finished the day by 03:15 UTC. Re-reads the last 3 days because GA4 revises them. */
   @Cron('15 3 * * *', { timeZone: 'UTC' })
   async nightly() {
-    if (!this.enabled) return;
-    try {
-      await this.run('cron', GA4_RECENT_DAYS);
-    } catch (err) {
-      this.logger.error(`Nightly GA4 sync did not run: ${(err as Error).message}`);
-    }
+    await this.each(async () => {
+      if (!this.enabled) return;
+      try {
+        await this.run('cron', GA4_RECENT_DAYS);
+      } catch (err) {
+        this.logger.error(`Nightly GA4 sync did not run: ${(err as Error).message}`);
+      }
+    });
   }
 
   async manual(days: number) {

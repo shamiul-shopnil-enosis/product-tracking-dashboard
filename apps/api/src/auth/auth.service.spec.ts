@@ -32,7 +32,7 @@ describe('AuthService.login', () => {
     const { service, users, session } = setup(base);
     const res = await service.login('a@x.com', 'correct-horse-1');
     expect(res.token).toBe('tok');
-    expect(res.user).toEqual({ id: 'u1', name: 'A', email: 'a@x.com', role: Role.Editor, active: true });
+    expect(res.user).toEqual({ id: 'u1', name: 'A', email: 'a@x.com', role: Role.Editor, active: true, superAdmin: false, memberships: [] });
     expect(JSON.stringify(res)).not.toContain('passwordHash');
     expect(users.markLogin).toHaveBeenCalledWith('u1');
     expect(session.sign).toHaveBeenCalledWith(base);

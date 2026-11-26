@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, Optional } from '@nestjs/common';
+import { ProfilesService } from '../profiles/profiles.service';
+import { currentProfileId } from '../profiles/profile-context';
 import { ManagedKey, RuntimeConfig, ValueSource } from '../settings/runtime-config';
 import { Ga4Client } from './ga4.client';
 
@@ -21,7 +23,7 @@ const PSI_KEY_RE = /^[A-Za-z0-9_-]{20,80}$/;
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name);
 
-  constructor(private readonly cfg: RuntimeConfig, private readonly ga4: Ga4Client) {}
+  constructor(private readonly cfg: RuntimeConfig, private readonly ga4: Ga4Client, @Optional() private readonly profiles?: ProfilesService) {}
 
   siteName(): string {
     return (this.cfg.get<string>('SITE_NAME') ?? '').trim() || DEFAULT_SITE_NAME;
@@ -59,7 +61,9 @@ export class SettingsService {
         throw new BadRequestException('The web address is not valid. Use something like https://example.com');
       }
     }
-    await this.cfg.set('SITE_NAME', name);
+    const pid = currentProfileId();
+    if (this.profiles && pid) await this.profiles.rename(pid, name); // the profile's name is the site name
+    else await this.cfg.set('SITE_NAME', name);
     if (url) await this.cfg.set('SITE_URL', url); else await this.cfg.clear('SITE_URL');
     this.log(who, 'the site name and address');
     return this.view();

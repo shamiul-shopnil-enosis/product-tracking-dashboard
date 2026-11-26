@@ -22,7 +22,7 @@ describe('JwtAuthGuard', () => {
   it('lets a valid, current session through and exposes the user', async () => {
     const { result, req } = run(await sign({ sub: 'u1', v: 2, st: NOW() }));
     expect(await result).toBe(true);
-    expect(req.user).toEqual({ id: 'u1', name: 'A', email: 'a@x.com', role: 'viewer' });
+    expect(req.user).toEqual({ id: 'u1', name: 'A', email: 'a@x.com', role: 'viewer', superAdmin: false, memberships: [] });
   });
 
   it('rejects a request with no cookie', async () => {

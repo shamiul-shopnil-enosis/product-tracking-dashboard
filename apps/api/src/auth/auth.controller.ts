@@ -1,6 +1,8 @@
 import { Body, Controller, Get, HttpCode, HttpException, Post, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { AuthUser, CurrentUser, Public } from '../common/decorators';
+import { AuthUser, CurrentUser, NoProfile, Public } from '../common/decorators';
+import { ProfilesService } from '../profiles/profiles.service';
+import { PROFILE_HEADER } from './profile.guard';
 import { toPublic, UsersService } from '../users/users.service';
 import { AcceptLinkDto, ChangePasswordDto, LinkTokenDto, LoginDto } from './auth.dto';
 import { AuthService } from './auth.service';
@@ -23,6 +25,7 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly users: UsersService,
     private readonly session: SessionService,
+    private readonly profiles: ProfilesService,
   ) {}
 
   private block(wait: number, res: Response): never | void {
@@ -62,9 +65,18 @@ export class AuthController {
     this.session.clearCookie(res);
   }
 
+  /** Who is signed in, which profiles they may open and the role they hold in the one they are looking at. */
+  @NoProfile()
   @Get('me')
-  me(@CurrentUser() user: AuthUser) {
-    return user;
+  me(@CurrentUser() user: AuthUser, @Req() req: Request) {
+    const profiles = this.profiles.accessibleTo(user);
+    const wanted = String(req.headers[PROFILE_HEADER] ?? '').trim();
+    const active = profiles.find((p) => p.id === wanted) ?? profiles.find((p) => p.isDefault) ?? profiles[0] ?? null;
+    return {
+      id: user.id, name: user.name, email: user.email,
+      role: active?.role ?? user.role, superAdmin: user.superAdmin,
+      profiles, activeProfileId: active?.id ?? null,
+    };
   }
 
   @Post('change-password')

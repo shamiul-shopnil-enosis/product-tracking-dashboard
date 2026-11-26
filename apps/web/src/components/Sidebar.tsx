@@ -9,7 +9,7 @@ import { useTheme } from '@/lib/theme';
 import { useApiData } from '@/lib/useApi';
 import { Icon, type IconName } from './Icon';
 import { Logo } from './Logo';
-import { useSiteName } from '@/lib/site';
+import { ProfileSwitcher } from './ProfileSwitcher';
 import { useEffects } from '@/lib/effects';
 
 type Status = {
@@ -35,7 +35,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const sp = useSearchParams();
   const [theme, toggleTheme] = useTheme();
-  const siteName = useSiteName();
   const fx = useEffects();
   const status = useApiData<Status>('/dashboard/status').data;
   const summary = useApiData<Summary>('/findings/summary').data;
@@ -54,7 +53,8 @@ export function Sidebar() {
   const fresh = c?.lastRunAt && Date.now() - new Date(c.lastRunAt).getTime() < 36 * 3600000 && c.lastRunStatus !== 'failed';
   return (
     <aside className="sidebar" aria-label="Sidebar">
-      <Link href="/" className="brand" aria-label="Product Analytics, home"><Logo width={124} /><span className="brand-name">Product Analytics<small>{siteName}</small></span></Link>
+      <Link href="/" className="brand" aria-label="Product Analytics, home"><Logo width={124} /><span className="brand-name">Product Analytics</span></Link>
+      <ProfileSwitcher />
       <nav aria-label="Main">
         <div className="navlabel">Analytics</div>
         <Item href="/" label="Overview" icon="overview" filters />
@@ -92,7 +92,7 @@ export function Sidebar() {
           <>
             <div className="navlabel">Admin</div>
             <Item href="/admin/data" label="Data sources" icon="database" />
-            <Item href="/admin/users" label="Users" icon="users" />
+            {user?.superAdmin && <Item href="/admin/users" label="Users" icon="users" />}
           </>
         )}
       </nav>

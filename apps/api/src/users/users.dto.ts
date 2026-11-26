@@ -1,4 +1,5 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { Role } from '../common/roles';
 
 export const MIN_PASSWORD_LENGTH = 10;
@@ -13,6 +14,13 @@ export class InviteUserDto {
 
   @IsEnum(Role)
   role: Role;
+
+  /** Profiles the person may open (with this role). */
+  @IsOptional() @IsArray() @ArrayMaxSize(100) @IsString({ each: true })
+  profileIds?: string[];
+
+  @IsOptional() @IsBoolean()
+  superAdmin?: boolean;
 }
 
 /** Internal shape used for the first admin created from the environment. */
@@ -32,4 +40,18 @@ export class UpdateUserDto {
 
   @IsOptional() @IsBoolean()
   active?: boolean;
+
+  @IsOptional() @IsBoolean()
+  superAdmin?: boolean;
+}
+
+export class MembershipDto {
+  @IsString() @MaxLength(40) profileId: string;
+  @IsEnum(Role) role: Role;
+}
+
+/** The full list of profiles a person may open. Replaces what they had. */
+export class AccessDto {
+  @IsArray() @ArrayMaxSize(100) @ValidateNested({ each: true }) @Type(() => MembershipDto)
+  memberships: MembershipDto[];
 }

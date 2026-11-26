@@ -1,9 +1,10 @@
 'use client';
 
-import { useApiData } from './useApi';
+import { useAuth } from '@/components/AuthProvider';
 
-/** The name of the site this dashboard is about. An admin sets it under Data sources. */
+/** The name of the site the person is looking at: the active profile's name. */
 export function useSiteName(): string {
-  const { data } = useApiData<{ siteName?: string }>('/health/context');
-  return data?.siteName ?? 'Enosis Outsourcing';
+  const { user } = useAuth();
+  const active = user?.profiles?.find((p) => p.id === user.activeProfileId);
+  return active?.name ?? 'Enosis Outsourcing';
 }

@@ -22,6 +22,14 @@ export class User {
   @Prop({ default: true })
   active: boolean;
 
+  /** Can create profiles, manage their keys and decide who gets access. Sees every profile as admin. */
+  @Prop({ default: false })
+  superAdmin: boolean;
+
+  /** Which profiles this person may open, and their role in each. */
+  @Prop({ type: [{ _id: false, profileId: { type: String, required: true }, role: { type: String, enum: Object.values(Role), required: true } }], default: [] })
+  memberships: Array<{ profileId: string; role: Role }>;
+
   /** Raised to end every existing session for this user (sign-out, password change, deactivation). */
   @Prop({ type: Number, default: 0 })
   tokenVersion: number;

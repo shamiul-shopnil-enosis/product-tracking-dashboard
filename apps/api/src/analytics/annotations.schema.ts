@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { profileScope } from '../profiles/scope.plugin';
 
 export const ANNOTATION_KINDS = ['release', 'campaign', 'incident', 'other'] as const;
 
@@ -13,4 +14,5 @@ export class Annotation {
 }
 export type AnnotationDocument = HydratedDocument<Annotation>;
 export const AnnotationSchema = SchemaFactory.createForClass(Annotation);
-AnnotationSchema.index({ date: 1 });
+AnnotationSchema.plugin(profileScope);
+AnnotationSchema.index({ profileId: 1, date: 1 });

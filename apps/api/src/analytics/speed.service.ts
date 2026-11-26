@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException, OnApplicationBootstrap, Optional } from '@nestjs/common';
+import { ProfilesService } from '../profiles/profiles.service';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
@@ -54,7 +55,13 @@ export class SpeedService implements OnApplicationBootstrap {
     @InjectModel(SpeedJob.name) private readonly jobs: Model<SpeedJobDocument>,
     @InjectModel(SyncRun.name) private readonly runs: Model<SyncRunDocument>,
     @InjectModel(AppSetting.name) private readonly settings: Model<AppSettingDocument>,
+    @Optional() private readonly profiles?: ProfilesService,
   ) {}
+
+  /** Background work runs once for every profile, each with its own API key and pages. */
+  private each(fn: () => Promise<void>): Promise<void> {
+    return this.profiles ? this.profiles.each(fn) : fn();
+  }
 
   get configured(): boolean {
     return this.client.configured;
@@ -75,11 +82,11 @@ export class SpeedService implements OnApplicationBootstrap {
 
   onApplicationBootstrap() {
     // A restart ends any test that was in progress; say so instead of leaving it "running" forever.
-    this.jobs
-      .updateMany({ status: { $in: ['queued', 'running'] } }, { $set: { status: 'failed', error: 'The server restarted before this finished' } })
-      .catch(() => undefined);
     setTimeout(() => {
-      this.catchUp().catch((err) => this.logger.error(`PageSpeed catch-up failed: ${(err as Error).message}`));
+      this.each(async () => {
+        await this.jobs.updateMany({ status: { $in: ['queued', 'running'] } }, { $set: { status: 'failed', error: 'The server restarted before this finished' } }).catch(() => undefined);
+        await this.catchUp();
+      }).catch((err) => this.logger.error(`PageSpeed catch-up failed: ${(err as Error).message}`));
     }, 30_000);
   }
 
@@ -112,14 +119,16 @@ export class SpeedService implements OnApplicationBootstrap {
    */
   @Cron('*/5 * * * *', { timeZone: 'UTC' })
   async tick(now = new Date()) {
-    try {
-      if (!(await this.enabled()) || bdMinutes(now) < toMinutes(await this.dailyTime())) return;
-      const dayStart = new Date(`${bdDay(now)}T00:00:00+06:00`);
-      if (await this.runs.exists({ provider: PROVIDER, trigger: 'cron', startedAt: { $gte: dayStart } })) return;
-      await this.runAll('scheduled');
-    } catch (err) {
-      this.logger.error(`Daily PageSpeed check did not run: ${(err as Error).message}`);
-    }
+    await this.each(async () => {
+      try {
+        if (!(await this.enabled()) || bdMinutes(now) < toMinutes(await this.dailyTime())) return;
+        const dayStart = new Date(`${bdDay(now)}T00:00:00+06:00`);
+        if (await this.runs.exists({ provider: PROVIDER, trigger: 'cron', startedAt: { $gte: dayStart } })) return;
+        await this.runAll('scheduled');
+      } catch (err) {
+        this.logger.error(`Daily PageSpeed check did not run: ${(err as Error).message}`);
+      }
+    });
   }
 
   private enqueue<T>(fn: () => Promise<T>): Promise<T> {

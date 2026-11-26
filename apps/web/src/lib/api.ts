@@ -1,4 +1,5 @@
 import { isPublicPath } from './publicPaths';
+import { getActiveProfileId, type ProfileSummary } from './profile';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -7,7 +8,13 @@ export class ApiError extends Error {
 }
 
 export type Role = 'viewer' | 'editor' | 'admin';
-export type User = { id: string; name: string; email: string; role: Role; active?: boolean };
+export type Membership = { profileId: string; role: Role };
+export type User = {
+  id: string; name: string; email: string; role: Role; active?: boolean;
+  superAdmin?: boolean; memberships?: Membership[];
+  /** From /auth/me: the profiles this person may open and the one in use. */
+  profiles?: ProfileSummary[]; activeProfileId?: string | null;
+};
 export type UserStatus = 'active' | 'invited' | 'deactivated';
 export type AdminUser = User & {
   status: UserStatus;
@@ -41,7 +48,10 @@ export async function api<T = void>(path: string, init: { method?: string; body?
 async function request<T>(path: string, init: { method?: string; body?: unknown }): Promise<T> {
   const res = await fetch(`/api${path}`, {
     method: init.method ?? 'GET',
-    headers: init.body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+    headers: {
+      ...(init.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(getActiveProfileId() ? { 'X-Profile': getActiveProfileId() as string } : {}),
+    },
     body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
     credentials: 'same-origin',
     cache: 'no-store',

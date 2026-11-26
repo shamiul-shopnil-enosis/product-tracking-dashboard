@@ -31,6 +31,7 @@ export function ShortcutList() {
     <table className="keys">
       <tbody>
         <tr><th scope="row"><kbd>/</kbd></th><td>Find a card (on the Google Analytics page)</td></tr>
+        <tr><th scope="row"><kbd>w</kbd></th><td>Switch profile</td></tr>
         <tr><th scope="row"><kbd>?</kbd></th><td>Show this list</td></tr>
         {GO_TO.map((g) => <tr key={g.key}><th scope="row"><kbd>g</kbd> <kbd>{g.key}</kbd></th><td>Go to {g.label}</td></tr>)}
         <tr><th scope="row"><kbd>Esc</kbd></th><td>Close a window or menu</td></tr>
@@ -58,6 +59,7 @@ export function Shortcuts() {
         if (hit) { e.preventDefault(); router.push(hit.href + (hit.filters ? filterQuery(new URLSearchParams(window.location.search)) : '')); }
         return;
       }
+      if (e.key === 'w') { e.preventDefault(); window.dispatchEvent(new Event('pt-open-profiles')); return; }
       if (e.key === 'g') { armed.current = true; pending.current = setTimeout(disarm, 1200); return; }
       if (e.key === '?') { e.preventDefault(); setHelp((v) => !v); return; }
       if (e.key === '/') {
